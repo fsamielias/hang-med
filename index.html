@@ -790,7 +790,7 @@
                         mainContent = <HomeScreen events={events} onNavigate={handleNavigate} currentUser={currentUser} />;
                 }
 
-                const showBottomNav = ['home', 'my-events', 'chat', 'profile'].includes(view.name);
+                const showBottomNav = ['home', 'my-events', 'chat', 'profile', 'create'].includes(view.name);
                 
                 return (
                     <div className="h-full flex flex-col relative">
@@ -824,6 +824,4 @@
     </script>
 </body>
 </html>
-
-
 

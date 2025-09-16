@@ -15,7 +15,7 @@
             animation: fadeInOut 3s ease-in-out;
         }
         @keyframes fadeInOut {
-            0% { opacity: 0; transform: translateY(20px) translateXa(-50%); }
+            0% { opacity: 0; transform: translateY(20px) translateX(-50%); }
             10% { opacity: 1; transform: translateY(0) translateX(-50%); }
             90% { opacity: 1; transform: translateY(0) translateX(-50%); }
             100% { opacity: 0; transform: translateY(20px) translateX(-50%); }
@@ -56,6 +56,7 @@
 
         // --- UTILITY FUNCTIONS ---
         const formatDateTime = (isoString) => {
+            if (!isoString) return '';
             const date = new Date(isoString);
             const options = { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false };
             return date.toLocaleDateString('sv-SE', options);
@@ -82,6 +83,8 @@
             messageCircle: (props) => (<svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>),
             settings: (props) => (<svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>),
             chevronRight: (props) => (<svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>),
+            edit: (props) => (<svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>),
+            trash: (props) => (<svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>),
         };
         
         // --- REUSABLE UI COMPONENTS (Memoized for performance) ---
@@ -178,8 +181,8 @@
                         return (
                             <div key={event.eventID} onClick={() => onNavigate('details', event.eventID)} className={`p-4 rounded-xl shadow-sm cursor-pointer transition-all bg-white hover:shadow-md relative border-[1mm] ${isJoined ? 'border-green-500' : 'border-[#5C524F]'}`}>
                                 <div className="flex items-start gap-4">
-                                    <div className="flex-1">
-                                        <p className="font-bold text-[#2E2E2E]">{event.title}</p>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="font-bold text-[#2E2E2E] truncate">{event.title}</p>
                                         <p className="text-sm text-[#2E2E2E]">{event.category}</p>
                                         <div className="text-xs text-[#2E2E2E]/80 mt-2 flex items-center gap-2">
                                             <Icons.clock className="w-3 h-3" />
@@ -187,7 +190,7 @@
                                         </div>
                                         <div className="text-xs text-[#2E2E2E]/80 mt-1 flex items-center gap-2">
                                             <Icons.mapPin className="w-3 h-3" />
-                                            <span>{event.location}</span>
+                                            <span className="truncate">{event.location}</span>
                                         </div>
                                     </div>
                                     <div className="flex items-center text-sm text-blue-600 font-semibold">
@@ -264,23 +267,26 @@
             const creator = usersById[event.creatorUserID];
             const attendees = event.attendeeUserIDs.map(id => usersById[id]);
             const hasJoined = event.attendeeUserIDs.includes(currentUser.userID);
+            const isCreator = currentUser.userID === event.creatorUserID;
             
             return (
                 <div className="flex flex-col h-full bg-white">
-                    <header className="p-4 flex items-center gap-4 border-b border-slate-200/50 bg-white/50 backdrop-blur-sm">
+                    <header className="p-4 flex items-center justify-between border-b border-slate-200/50 bg-white/50 backdrop-blur-sm">
                         <button onClick={() => onNavigate('home')} className="p-2 rounded-full hover:bg-slate-100/60">
                             <Icons.arrowLeft className="w-6 h-6 text-[#2E2E2E]" />
                         </button>
+                        <div className="flex-1"></div> {/* Spacer */}
+                        
                     </header>
                     <main className="flex-grow overflow-y-auto p-6 space-y-6">
                         <div className={`bg-white p-5 rounded-xl space-y-4 border-[1mm] ${hasJoined ? 'border-green-500' : 'border-[#5C524F]'}`}>
                             <div className="flex items-center gap-4">
-                                <div><h2 className="text-2xl font-bold text-[#2E2E2E]">{event.title}</h2></div>
+                                <div className="min-w-0"><h2 className="text-2xl font-bold text-[#2E2E2E] break-words">{event.title}</h2></div>
                             </div>
-                            <p className="text-[#2E2E2E]/80">{event.description}</p>
+                            <p className="text-[#2E2E2E]/80 break-words">{event.description}</p>
                             <div className="space-y-3 pt-2 text-[#2E2E2E]">
                                 <div className="flex items-center gap-3"><Icons.clock className="w-5 h-5 text-[#2E2E2E]/60" /><span>{formatDateTime(event.dateTime)}</span></div>
-                                <div className="flex items-center gap-3"><Icons.mapPin className="w-5 h-5 text-[#2E2E2E]/60" /><span>{event.location}</span></div>
+                                <div className="flex items-center gap-3"><Icons.mapPin className="w-5 h-5 text-[#2E2E2E]/60" /><span className="break-words min-w-0">{event.location}</span></div>
                                 <div className="flex items-center gap-3"><Icons.user className="w-5 h-5 text-[#2E2E2E]/60" /><span>Skapad av <strong>{creator?.name || 'Okänd'}</strong></span></div>
                             </div>
                             <div>
@@ -307,6 +313,11 @@
                         )}
                     </main>
                     <footer className="p-4 bg-white/80 backdrop-blur-sm border-t border-slate-200/50">
+                        {isCreator && (
+                            <ActionButton onClick={() => onNavigate('edit-event', event.eventID)} className="mb-2">
+                                Gör ändringar i träff
+                            </ActionButton>
+                        )}
                         {hasJoined ? (
                             <button onClick={() => onLeave(event.eventID)} className="w-full text-red-700 font-semibold py-3 px-4 rounded-full bg-red-100 hover:bg-red-200 transition-all duration-300 shadow-sm">
                                 Gå ut från träff
@@ -359,7 +370,6 @@
                 e.preventDefault();
                 const dateTime = combineDateAndTime(date, time);
                 if (!dateTime) {
-                    // Consider showing an error to the user
                     console.error("Date and time must be set.");
                     return;
                 }
@@ -382,7 +392,7 @@
                         <form onSubmit={handleSubmit} className="space-y-4">
                             <div>
                                 <label className="text-sm font-bold text-[#2E2E2E]">Titel</label>
-                                <input type="text" value={title} onChange={e => setTitle(e.target.value)} required className="w-full mt-1 p-2 border border-slate-200/80 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C3B37A] bg-white" />
+                                <input type="text" value={title} onChange={e => setTitle(e.target.value)} required className="w-full mt-1 p-2 border border-slate-200/80 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C3B37A] bg-white" maxLength="29" />
                             </div>
                             <div>
                                 <label className="text-sm font-bold text-[#2E2E2E]">Kategori</label>
@@ -413,7 +423,7 @@
                             </div>
                             <div>
                                 <label className="text-sm font-bold text-[#2E2E2E]">Plats</label>
-                                <input type="text" value={location} onChange={(e) => setLocation(e.target.value)} required className="w-full mt-1 p-2 border border-slate-200/80 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C3B37A] bg-white" />
+                                <input type="text" value={location} onChange={(e) => setLocation(e.target.value)} required className="w-full mt-1 p-2 border border-slate-200/80 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C3B37A] bg-white" maxLength="70" />
                             </div>
                             <div className="flex gap-4">
                                 <div className="flex-1">
@@ -436,10 +446,146 @@
                                     <label className="text-sm font-bold text-[#2E2E2E]">Beskrivning</label>
                                     <button type="button" onClick={generateAIDescription} disabled={isGenerating} className="text-sm text-[#C3B37A] hover:underline font-semibold disabled:opacity-50">{isGenerating ? 'Genererar...' : 'Generera med AI'}</button>
                                 </div>
-                                <textarea value={description} onChange={e => setDescription(e.target.value)} required rows="4" className="w-full mt-1 p-2 border border-slate-200/80 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C3B37A] bg-white"></textarea>
+                                <textarea value={description} onChange={e => setDescription(e.target.value)} required rows="4" className="w-full mt-1 p-2 border border-slate-200/80 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C3B37A] bg-white" maxLength="280"></textarea>
                             </div>
                             <div className="pt-2"><ActionButton type="submit">Skapa träff</ActionButton></div>
                         </form>
+                    </main>
+                </div>
+            );
+        });
+        
+         const EditEventScreen = memo(({ eventId, events, onUpdate, onDelete, onNavigate }) => {
+            const eventToEdit = useMemo(() => events.find(e => e.eventID === eventId), [events, eventId]);
+
+            const [title, setTitle] = useState('');
+            const [category, setCategory] = useState('Fika');
+            const [location, setLocation] = useState('');
+            const [date, setDate] = useState('');
+            const [time, setTime] = useState('');
+            const [description, setDescription] = useState('');
+            const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
+            
+            useEffect(() => {
+                if (eventToEdit) {
+                    const eventDate = new Date(eventToEdit.dateTime);
+                    setTitle(eventToEdit.title);
+                    setCategory(eventToEdit.category);
+                    setLocation(eventToEdit.location);
+                    setDescription(eventToEdit.description);
+                    setDate(eventDate.toISOString().split('T')[0]);
+                    setTime(eventDate.toTimeString().substring(0, 5));
+                }
+            }, [eventToEdit]);
+
+
+            if (!eventToEdit) {
+                return <div className="p-4">Kunde inte hitta träffen att redigera.</div>;
+            }
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                const dateTime = combineDateAndTime(date, time);
+                if (!dateTime) {
+                    console.error("Date and time must be set.");
+                    return;
+                }
+                const updatedEvent = {
+                    ...eventToEdit,
+                    title, description, category, location, dateTime
+                };
+                onUpdate(updatedEvent);
+            };
+
+            const handleDelete = () => {
+                onDelete(eventId);
+            };
+
+            return (
+                <div className="flex flex-col h-full bg-white">
+                    <header className="p-4 flex items-center justify-between border-b border-slate-200/50 bg-white/50 backdrop-blur-sm sticky top-0">
+                        <button onClick={() => onNavigate('details', eventId)} className="p-2 rounded-full hover:bg-slate-100/60">
+                             <Icons.arrowLeft className="w-6 h-6 text-[#2E2E2E]" />
+                        </button>
+                        <h1 className="text-xl font-semibold text-[#C3B37A]">Redigera träff</h1>
+                        <div className="w-10"></div>
+                    </header>
+                    <main className="flex-grow overflow-y-auto p-6">
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                            <div>
+                                <label className="text-sm font-bold text-[#2E2E2E]">Titel</label>
+                                <input type="text" value={title} onChange={e => setTitle(e.target.value)} required className="w-full mt-1 p-2 border border-slate-200/80 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C3B37A] bg-white" maxLength="29" />
+                            </div>
+                            <div>
+                                <label className="text-sm font-bold text-[#2E2E2E]">Kategori</label>
+                                <select value={category} onChange={e => setCategory(e.target.value)} className="w-full mt-1 p-2 border border-slate-200/80 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C3B37A] bg-white">
+                                    <optgroup label="☕ Mat & Dryck">
+                                        <option>Fika</option>
+                                        <option>Äta ute</option>
+                                        <option>Ta ett glas</option>
+                                    </optgroup>
+                                    <optgroup label="🌳 Aktivitet & Natur">
+                                        <option>Promenad</option>
+                                        <option>Träna tillsammans</option>
+                                        <option>Sport</option>
+                                    </optgroup>
+                                    <optgroup label="🎭 Kultur & Nöje">
+                                        <option>Bio</option>
+                                        <option>Museum / Utställning</option>
+                                        <option>Konsert / Gig</option>
+                                    </optgroup>
+                                    <optgroup label="🎲 Hobby & Spel">
+                                        <option>Brädspel / Spelkväll</option>
+                                        <option>Fotografering</option>
+                                    </optgroup>
+                                    <optgroup label="✨ Annat">
+                                        <option>Annat</option>
+                                    </optgroup>
+                                </select>
+                            </div>
+                            <div>
+                                <label className="text-sm font-bold text-[#2E2E2E]">Plats</label>
+                                <input type="text" value={location} onChange={(e) => setLocation(e.target.value)} required className="w-full mt-1 p-2 border border-slate-200/80 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C3B37A] bg-white" maxLength="70" />
+                            </div>
+                            <div className="flex gap-4">
+                                <div className="flex-1">
+                                    <label className="text-sm font-bold text-[#2E2E2E]">Datum</label>
+                                    <div className="relative mt-1">
+                                        <input type="date" value={date} min={new Date().toISOString().split('T')[0]} onChange={e => setDate(e.target.value)} required className="w-full p-2 pr-10 border border-slate-200/80 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C3B37A] bg-white" />
+                                        <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none"><Icons.calendar className="w-5 h-5 text-slate-400" /></div>
+                                    </div>
+                                </div>
+                                <div className="flex-1">
+                                    <label className="text-sm font-bold text-[#2E2E2E]">Tid</label>
+                                     <div className="relative mt-1">
+                                        <input type="time" step="900" value={time} onChange={e => setTime(e.target.value)} required className="w-full p-2 pr-10 border border-slate-200/80 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C3B37A] bg-white" />
+                                         <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none"><Icons.clock className="w-5 h-5 text-slate-400" /></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <label className="text-sm font-bold text-[#2E2E2E]">Beskrivning</label>
+                                <textarea value={description} onChange={e => setDescription(e.target.value)} required rows="4" className="w-full mt-1 p-2 border border-slate-200/80 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C3B37A] bg-white" maxLength="280"></textarea>
+                            </div>
+                            <div className="pt-2"><ActionButton type="submit">Spara ändringar</ActionButton></div>
+                        </form>
+                         <div className="mt-8 pt-4 border-t border-slate-200/80">
+                            {isConfirmingDelete ? (
+                                <div className="text-center">
+                                    <p className="font-semibold text-red-700">Är du säker på att du vill ta bort träffen?</p>
+                                    <p className="text-sm text-slate-500">Detta kan inte ångras.</p>
+                                    <div className="mt-4 flex gap-4">
+                                        <button onClick={() => setIsConfirmingDelete(false)} className="flex-1 text-slate-600 font-semibold py-2 px-4 rounded-full bg-slate-200 hover:bg-slate-300 transition-colors">Avbryt</button>
+                                        <button onClick={handleDelete} className="flex-1 text-white font-semibold py-2 px-4 rounded-full bg-red-600 hover:bg-red-700 transition-colors">Ja, ta bort</button>
+                                    </div>
+                                </div>
+                            ) : (
+                                <button onClick={() => setIsConfirmingDelete(true)} className="w-full text-red-600 font-semibold py-3 px-4 rounded-full bg-red-100 hover:bg-red-200 transition-colors flex items-center justify-center gap-2">
+                                    <Icons.trash className="w-5 h-5" />
+                                    <span>Ta bort träff</span>
+                                </button>
+                            )}
+                        </div>
                     </main>
                 </div>
             );
@@ -484,8 +630,8 @@
                 return (
                      <div onClick={() => onNavigate('details', event.eventID)} className={`p-4 rounded-xl shadow-sm cursor-pointer transition-all bg-white hover:shadow-md relative border-[1mm] ${isJoined ? 'border-green-500' : 'border-gray-300'}`}>
                         <div className="flex items-start gap-4">
-                            <div className="flex-1">
-                                <p className="font-bold text-[#2E2E2E]">{event.title}</p>
+                            <div className="flex-1 min-w-0">
+                                <p className="font-bold text-[#2E2E2E] truncate">{event.title}</p>
                                 <p className="text-sm text-gray-600">{event.category}</p>
                                 <div className="text-xs text-gray-500 mt-2 flex items-center gap-2">
                                     <Icons.clock className="w-3 h-3" />
@@ -493,7 +639,7 @@
                                 </div>
                                 <div className="text-xs text-gray-500 mt-1 flex items-center gap-2">
                                     <Icons.mapPin className="w-3 h-3" />
-                                    <span>{event.location}</span>
+                                    <span className="truncate">{event.location}</span>
                                 </div>
                             </div>
                             <div className="flex items-center text-sm text-blue-600 font-semibold">
@@ -737,8 +883,8 @@
                                     <div key={event.eventID} className="bg-white rounded-lg shadow-sm transition-all border-[1mm] border-green-500">
                                         <div onClick={() => handleToggleChat(event.eventID)} className="p-4 cursor-pointer hover:bg-slate-100/60 relative">
                                             <div className="flex items-start gap-4">
-                                                <div className="flex-1">
-                                                    <p className="font-bold text-[#2E2E2E]">{event.title}</p>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="font-bold text-[#2E2E2E] truncate">{event.title}</p>
                                                     <p className="text-sm text-[#2E2E2E]">{event.category}</p>
                                                     <div className="text-xs text-[#2E2E2E]/80 mt-2 flex items-center gap-2">
                                                         <Icons.clock className="w-3 h-3" />
@@ -746,7 +892,7 @@
                                                     </div>
                                                     <div className="text-xs text-[#2E2E2E]/80 mt-1 flex items-center gap-2">
                                                         <Icons.mapPin className="w-3 h-3" />
-                                                        <span>{event.location}</span>
+                                                        <span className="truncate">{event.location}</span>
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center text-sm text-blue-600 font-semibold">
@@ -820,6 +966,21 @@
                 handleNavigate('home');
                 showToast('Din träff har skapats!');
             };
+
+             const handleUpdateEvent = (updatedEvent) => {
+                setEvents(prevEvents => prevEvents.map(event => 
+                    event.eventID === updatedEvent.eventID ? updatedEvent : event
+                ));
+                handleNavigate('details', updatedEvent.eventID);
+                showToast('Träffen har uppdaterats!');
+            };
+
+            const handleDeleteEvent = (eventId) => {
+                setEvents(prevEvents => prevEvents.filter(event => event.eventID !== eventId));
+                handleNavigate('home');
+                showToast('Träffen har tagits bort.');
+            };
+
             
             const handleJoinEvent = (eventId) => {
                 setEvents(prevEvents => prevEvents.map(event => {
@@ -892,6 +1053,15 @@
                     case 'create':
                         mainContent = <CreateEventScreen currentUser={currentUser} onCreate={handleCreateEvent} onNavigate={handleNavigate} />;
                         break;
+                    case 'edit-event':
+                        mainContent = <EditEventScreen 
+                            eventId={view.payload}
+                            events={events}
+                            onUpdate={handleUpdateEvent}
+                            onDelete={handleDeleteEvent}
+                            onNavigate={handleNavigate}
+                        />;
+                        break;
                     case 'my-events':
                         mainContent = <MyEventsScreen events={events} currentUser={currentUser} onNavigate={handleNavigate} />;
                         break;
@@ -942,4 +1112,5 @@
     </script>
 </body>
 </html>
+
 

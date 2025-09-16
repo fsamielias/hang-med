@@ -98,6 +98,76 @@
             </button>
         ));
 
+        const SwipeButton = ({ onSuccess, text }) => {
+            const [thumbPosition, setThumbPosition] = useState(0);
+            const [isSwiping, setIsSwiping] = useState(false);
+            const [isCompleted, setIsCompleted] = useState(false);
+            const trackRef = useRef(null);
+            const thumbRef = useRef(null);
+            
+            const handleSwipeStart = (e) => {
+                if (isCompleted) return;
+                setIsSwiping(true);
+                thumbRef.current.style.transition = 'none';
+                document.addEventListener('mousemove', handleSwipeMove);
+                document.addEventListener('touchmove', handleSwipeMove, { passive: false });
+                document.addEventListener('mouseup', handleSwipeEnd);
+                document.addEventListener('touchend', handleSwipeEnd);
+            };
+
+            const handleSwipeMove = (e) => {
+                e.preventDefault();
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const trackRect = trackRef.current.getBoundingClientRect();
+                const thumbWidth = thumbRef.current.offsetWidth;
+                let newX = clientX - trackRect.left - (thumbWidth / 2);
+                const maxPosition = trackRect.width - thumbWidth;
+                newX = Math.max(0, Math.min(newX, maxPosition));
+                setThumbPosition(newX);
+            };
+
+            const handleSwipeEnd = () => {
+                document.removeEventListener('mousemove', handleSwipeMove);
+                document.removeEventListener('touchmove', handleSwipeMove);
+                document.removeEventListener('mouseup', handleSwipeEnd);
+                document.removeEventListener('touchend', handleSwipeEnd);
+
+                if (!isSwiping) return;
+
+                setIsSwiping(false);
+                thumbRef.current.style.transition = 'transform 0.3s ease-out';
+                const trackWidth = trackRef.current.offsetWidth;
+                const thumbWidth = thumbRef.current.offsetWidth;
+                const successThreshold = trackWidth - thumbWidth - 5;
+
+                if (thumbPosition >= successThreshold) {
+                    setThumbPosition(trackWidth - thumbWidth);
+                    setIsCompleted(true);
+                    onSuccess();
+                } else {
+                    setThumbPosition(0);
+                }
+            };
+
+            return (
+                <div ref={trackRef} className="w-full h-[52px] bg-green-200 rounded-full relative flex items-center justify-center overflow-hidden select-none cursor-grab active:cursor-grabbing">
+                    <span className={`z-10 text-green-800 font-bold transition-opacity duration-300 ${isSwiping || isCompleted ? 'opacity-0' : 'opacity-100'}`}>
+                        {text}
+                    </span>
+                    <div 
+                        ref={thumbRef}
+                        className="w-[52px] h-[52px] bg-green-500 rounded-full absolute top-0 left-0 flex items-center justify-center shadow-md border-4 border-green-200"
+                        style={{ transform: `translateX(${thumbPosition}px)` }}
+                        onMouseDown={handleSwipeStart}
+                        onTouchStart={handleSwipeStart}
+                    >
+                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"></path></svg>
+                    </div>
+                </div>
+            );
+        };
+
+
         const BottomNav = memo(({ activeView, onNavigate }) => {
             const navItems = [
                 { view: 'home', icon: Icons.home, label: 'Träffar' },
@@ -178,8 +248,10 @@
                 <main className="flex-grow overflow-y-auto p-6 space-y-4">
                     {events.sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime)).map(event => {
                         const isJoined = event.attendeeUserIDs.includes(currentUser.userID);
+                        const isCreator = event.creatorUserID === currentUser.userID;
+                        const borderColor = isCreator ? 'border-[#C3B37A]' : isJoined ? 'border-green-500' : 'border-[#5C524F]';
                         return (
-                            <div key={event.eventID} onClick={() => onNavigate('details', event.eventID)} className={`p-4 rounded-xl shadow-sm cursor-pointer transition-all bg-white hover:shadow-md relative border-[1mm] ${isJoined ? 'border-green-500' : 'border-[#5C524F]'}`}>
+                            <div key={event.eventID} onClick={() => onNavigate('details', event.eventID)} className={`p-4 rounded-xl shadow-sm cursor-pointer transition-all bg-white hover:shadow-md relative border-[1mm] ${borderColor}`}>
                                 <div className="flex items-start gap-4">
                                     <div className="flex-1 min-w-0">
                                         <p className="font-bold text-[#2E2E2E] truncate">{event.title}</p>
@@ -206,9 +278,11 @@
             </div>
         ));
         
-        const ChatComponent = memo(({ eventId, messages, usersById, currentUser, onSendMessage, hasJoined }) => {
+        const ChatComponent = memo(({ eventId, messages, usersById, currentUser, onSendMessage, hasJoined, isCreator }) => {
             const [newMessage, setNewMessage] = useState('');
             const chatContainerRef = useRef(null);
+            
+            const borderColor = isCreator ? 'border-[#C3B37A]' : hasJoined ? 'border-green-500' : 'border-[#5C524F]';
 
             useEffect(() => {
                 if (chatContainerRef.current) {
@@ -224,7 +298,7 @@
                 }
             };
             return (
-                <div className={`bg-white p-5 rounded-xl border-[1mm] ${hasJoined ? 'border-green-500' : 'border-[#5C524F]'}`}>
+                <div className={`bg-white p-5 rounded-xl border-[1mm] ${borderColor}`}>
                     <div ref={chatContainerRef} className="space-y-4 max-h-48 overflow-y-auto pr-2">
                         {messages.map(message => {
                             const sender = usersById[message.userID];
@@ -268,6 +342,7 @@
             const attendees = event.attendeeUserIDs.map(id => usersById[id]);
             const hasJoined = event.attendeeUserIDs.includes(currentUser.userID);
             const isCreator = currentUser.userID === event.creatorUserID;
+            const borderColor = isCreator ? 'border-[#C3B37A]' : hasJoined ? 'border-green-500' : 'border-[#5C524F]';
             
             return (
                 <div className="flex flex-col h-full bg-white">
@@ -279,7 +354,7 @@
                         
                     </header>
                     <main className="flex-grow overflow-y-auto p-6 space-y-6">
-                        <div className={`bg-white p-5 rounded-xl space-y-4 border-[1mm] ${hasJoined ? 'border-green-500' : 'border-[#5C524F]'}`}>
+                        <div className={`bg-white p-5 rounded-xl space-y-4 border-[1mm] ${borderColor}`}>
                             <div className="flex items-center gap-4">
                                 <div className="min-w-0"><h2 className="text-2xl font-bold text-[#2E2E2E] break-words">{event.title}</h2></div>
                             </div>
@@ -304,7 +379,7 @@
                             </div>
                         </div>
                         {hasJoined ? (
-                            <ChatComponent eventId={eventId} messages={chatMessages[eventId] || []} usersById={usersById} currentUser={currentUser} onSendMessage={onSendMessage} hasJoined={hasJoined} />
+                            <ChatComponent eventId={eventId} messages={chatMessages[eventId] || []} usersById={usersById} currentUser={currentUser} onSendMessage={onSendMessage} hasJoined={hasJoined} isCreator={isCreator} />
                         ) : (
                             <div className="bg-white p-8 rounded-xl shadow-sm text-center border-[1mm] border-[#5C524F]">
                                 <p className="font-semibold text-[#2E2E2E]">Gå med för att se chatten</p>
@@ -323,9 +398,7 @@
                                 Gå ut från träff
                             </button>
                         ) : (
-                            <ActionButton onClick={() => onJoin(event.eventID)}>
-                                Gå med i träff
-                            </ActionButton>
+                             <SwipeButton onSuccess={() => onJoin(event.eventID)} text="Svep för att gå med" />
                         )}
                     </footer>
                 </div>
@@ -567,11 +640,11 @@
                                 <label className="text-sm font-bold text-[#2E2E2E]">Beskrivning</label>
                                 <textarea value={description} onChange={e => setDescription(e.target.value)} required rows="4" className="w-full mt-1 p-2 border border-slate-200/80 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C3B37A] bg-white" maxLength="280"></textarea>
                             </div>
-                            <div className="pt-2"><ActionButton type="submit">Spara ändringar</ActionButton></div>
+                            <div className="pt-4"><ActionButton type="submit">Spara ändringar</ActionButton></div>
                         </form>
-                         <div className="mt-8 pt-4 border-t border-slate-200/80">
+                         <div className="mt-4">
                             {isConfirmingDelete ? (
-                                <div className="text-center">
+                                <div className="text-center p-4 rounded-lg bg-red-50">
                                     <p className="font-semibold text-red-700">Är du säker på att du vill ta bort träffen?</p>
                                     <p className="text-sm text-slate-500">Detta kan inte ångras.</p>
                                     <div className="mt-4 flex gap-4">
@@ -625,10 +698,13 @@
             }, [events, currentUser.userID]);
 
 
-            const EventCard = memo(({event, onNavigate}) => {
+            const EventCard = memo(({event, onNavigate, currentUser}) => {
                 const isJoined = event.attendeeUserIDs.includes(currentUser.userID);
+                const isCreator = event.creatorUserID === currentUser.userID;
+                const borderColor = isCreator ? 'border-[#C3B37A]' : isJoined ? 'border-green-500' : 'border-[#5C524F]';
+                
                 return (
-                     <div onClick={() => onNavigate('details', event.eventID)} className={`p-4 rounded-xl shadow-sm cursor-pointer transition-all bg-white hover:shadow-md relative border-[1mm] ${isJoined ? 'border-green-500' : 'border-gray-300'}`}>
+                     <div onClick={() => onNavigate('details', event.eventID)} className={`p-4 rounded-xl shadow-sm cursor-pointer transition-all bg-white hover:shadow-md relative border-[1mm] ${borderColor}`}>
                         <div className="flex items-start gap-4">
                             <div className="flex-1 min-w-0">
                                 <p className="font-bold text-[#2E2E2E] truncate">{event.title}</p>
@@ -667,20 +743,20 @@
                          <div>
                             <h2 className="text-lg font-bold text-[#2E2E2E] mb-3">På gång för mig ({categorizedEvents.upcomingJoined.length})</h2>
                             {categorizedEvents.upcomingJoined.length > 0 ? (
-                                <div className="space-y-4">{categorizedEvents.upcomingJoined.map(event => (<EventCard key={event.eventID} event={event} onNavigate={onNavigate} />))}</div>
+                                <div className="space-y-4">{categorizedEvents.upcomingJoined.map(event => (<EventCard key={event.eventID} event={event} onNavigate={onNavigate} currentUser={currentUser} />))}</div>
                             ) : (<EmptyState icon={Icons.calendar} title="Inga kommande träffar" text="Gå med i en träff för att se den här." />)}
                         </div>
                          <div>
                             <h2 className="text-lg font-bold text-[#2E2E2E] mb-3">Mina skapade träffar ({categorizedEvents.createdEvents.length})</h2>
                             {categorizedEvents.createdEvents.length > 0 ? (
-                                <div className="space-y-4">{categorizedEvents.createdEvents.map(event => (<EventCard key={event.eventID} event={event} onNavigate={onNavigate} />))}</div>
+                                <div className="space-y-4">{categorizedEvents.createdEvents.map(event => (<EventCard key={event.eventID} event={event} onNavigate={onNavigate} currentUser={currentUser} />))}</div>
                             ) : (<EmptyState icon={Icons.plus} title="Du har inte skapat något" text="Klicka på plus-knappen för att skapa din första träff." />)}
                         </div>
                          {categorizedEvents.pastJoined.length > 0 && (
                             <div>
                                 <h2 className="text-lg font-bold text-[#2E2E2E] mb-3">Tidigare träffar ({categorizedEvents.pastJoined.length})</h2>
                                 <div className="space-y-4 opacity-60">
-                                    {categorizedEvents.pastJoined.map(event => (<EventCard key={event.eventID} event={event} onNavigate={onNavigate} />))}
+                                    {categorizedEvents.pastJoined.map(event => (<EventCard key={event.eventID} event={event} onNavigate={onNavigate} currentUser={currentUser} />))}
                                 </div>
                             </div>
                         )}
@@ -879,8 +955,10 @@
                     <main className="flex-grow overflow-y-auto p-6 space-y-4">
                         {joinedEvents.length > 0 ? (
                             joinedEvents.map(event => {
+                                const isCreator = event.creatorUserID === currentUser.userID;
+                                const borderColor = isCreator ? 'border-[#C3B37A]' : 'border-green-500';
                                 return (
-                                    <div key={event.eventID} className="bg-white rounded-lg shadow-sm transition-all border-[1mm] border-green-500">
+                                    <div key={event.eventID} className={`bg-white rounded-lg shadow-sm transition-all border-[1mm] ${borderColor}`}>
                                         <div onClick={() => handleToggleChat(event.eventID)} className="p-4 cursor-pointer hover:bg-slate-100/60 relative">
                                             <div className="flex items-start gap-4">
                                                 <div className="flex-1 min-w-0">
@@ -904,7 +982,7 @@
                                         </div>
                                         {expandedChatId === event.eventID && (
                                             <div className="p-4 border-t border-slate-200/80">
-                                                 <ChatComponent eventId={event.eventID} messages={chatMessages[event.eventID] || []} usersById={usersById} currentUser={currentUser} onSendMessage={onSendMessage} hasJoined={true} />
+                                                 <ChatComponent eventId={event.eventID} messages={chatMessages[event.eventID] || []} usersById={usersById} currentUser={currentUser} onSendMessage={onSendMessage} hasJoined={true} isCreator={isCreator} />
                                             </div>
                                         )}
                                     </div>
@@ -1078,7 +1156,7 @@
                         mainContent = <HomeScreen events={events} onNavigate={handleNavigate} currentUser={currentUser} />;
                 }
 
-                const showBottomNav = ['home', 'my-events', 'chat', 'profile', 'create', 'details'].includes(view.name);
+                const showBottomNav = ['home', 'my-events', 'chat', 'profile', 'create', 'details', 'edit-event'].includes(view.name);
                 
                 return (
                     <div className="h-full flex flex-col relative">
@@ -1112,5 +1190,4 @@
     </script>
 </body>
 </html>
-
 

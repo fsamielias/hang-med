@@ -15,7 +15,7 @@
             animation: fadeInOut 3s ease-in-out;
         }
         @keyframes fadeInOut {
-            0% { opacity: 0; transform: translateY(20px) translateX(-50%); }
+            0% { opacity: 0; transform: translateY(20px) translateXa(-50%); }
             10% { opacity: 1; transform: translateY(0) translateX(-50%); }
             90% { opacity: 1; transform: translateY(0) translateX(-50%); }
             100% { opacity: 0; transform: translateY(20px) translateX(-50%); }
@@ -45,7 +45,7 @@
 
         const INITIAL_EVENTS_DATA = [
             { eventID: 101, title: 'Morgonfika på Vete-Katten', description: 'En klassisk svensk fika för att starta dagen.', category: 'Fika', location: 'Järntorget 3, Göteborg', dateTime: '2025-09-20T10:00:00', creatorUserID: 2, attendeeUserIDs: [2, 5] },
-            { eventID: 102, title: 'Avkopplande promenad i Slottsskogen', description: 'En fridfull promenad i vacker natur.', category: 'Walk', location: 'Säldammsbacken, Göteborg', dateTime: '2025-09-21T14:30:00', creatorUserID: 1, attendeeUserIDs: [1, 5] },
+            { eventID: 102, title: 'Avkopplande promenad i Slottsskogen', description: 'En fridfull promenad i vacker natur.', category: 'Promenad', location: 'Säldammsbacken, Göteborg', dateTime: '2025-09-21T14:30:00', creatorUserID: 1, attendeeUserIDs: [1, 5] },
             { eventID: 103, title: 'Badminton i Fjäderborgen', description: 'Vänskapsmatch i badminton, alla nivåer välkomna.', category: 'Sport', location: 'Södra Långebergsgatan 4, Göteborg', dateTime: '2025-09-22T18:00:00', creatorUserID: 1, attendeeUserIDs: [1] },
         ];
 
@@ -335,13 +335,17 @@
                 setIsGenerating(true);
                 setTimeout(() => {
                     const templates = {
-                        'Fika': [`En trevlig fika för att snacka och umgås. Vi ses vid ${location || 'angiven plats'} runt ${time || 'utsatt tid'} för lite kaffe och gott sällskap.`, `Dags för en kaffepaus! Jag bjuder in till en avslxlabnad fika på ${location || 'trevligt ställe'} vid ${time || 'passande tid'}. Hoppas vi ses!`],
-                        'Walk': [`Häng med på en uppfriskande promenad vid ${location || 'vårt mötesställe'}. Vi tar en skön tur och njuter av omgivningen, startar runt ${time || 'utsatt tid'}.`],
-                        'Cinema': [`Biokväll! Vi ser "${title || 'den nya filmen'}" på ${location || 'biografen'}. Samling utanför en stund innan filmen börjar vid ${time || 'utsatt tid'}.`],
-                        'Sport': [`Dags att röra på sig! ${title || 'En rolig sportaktivitet'} vid ${location || 'platsen'}. Perfekt för att få upp pulsen och ha kul tillsammans. Starttid är ${time || 'ca tid'}.`],
-                        'Middag': [`Gemensam middag på ${location || 'restaurangen'}. En kväll med god mat och härligt sällskap. Bokat bord från kl ${time || 'utsatt tid'}.`],
-                        'Lunch': [`Lunchdejt! Vi käkar på ${location || 'stället'} runt ${time || 'lunchtid'}. Ett perfekt avbrott i dagen.`],
-                        'Shopping': [`Shoppingrunda på ${location || 'stan'}. Oavsett om du letar efter något speciellt eller bara vill fönstershoppa, häng på! Vi börjar runt ${time || 'utsatt tid'}.`],
+                        'Fika': [`En trevlig fika för att snacka och umgås. Vi ses vid ${location || 'angiven plats'} runt ${time || 'utsatt tid'} för lite kaffe och gott sällskap.`, `Dags för en kaffepaus! Jag bjuder in till en avslappnad fika på ${location || 'trevligt ställe'} vid ${time || 'passande tid'}. Hoppas vi ses!`],
+                        'Äta ute': [`Gemensam middag på ${location || 'restaurangen'}. En kväll med god mat och härligt sällskap. Bokat bord från kl ${time || 'utsatt tid'}.`, `Lunchdejt! Vi käkar på ${location || 'stället'} runt ${time || 'lunchtid'}. Ett perfekt avbrott i dagen.`],
+                        'Ta ett glas': [`Sugen på en öl eller ett glas vin? Vi ses på ${location || 'ett trevligt ställe'} för en avslappnad after-work eller helgkväll runt ${time || 'utsatt tid'}.`],
+                        'Promenad': [`Häng med på en uppfriskande promenad vid ${location || 'vårt mötesställe'}. Vi tar en skön tur och njuter av omgivningen, startar runt ${time || 'utsatt tid'}.`],
+                        'Träna tillsammans': [`Dags att röra på sig! En löprunda, ett pass på utegymmet eller något annat? Vi ses vid ${location || 'platsen'} runt ${time || 'utsatt tid'} för att träna tillsammans.`],
+                        'Sport': [`Dags för sport! ${title || 'En rolig sportaktivitet'} vid ${location || 'platsen'}. Perfekt för att få upp pulsen och ha kul tillsammans. Starttid är ${time || 'ca tid'}.`, `Ska vi se matchen på ${location || 'en sportbar'}? Samling runt ${time || 'utsatt tid'}.`],
+                        'Bio': [`Biokväll! Vi ser "${title || 'den nya filmen'}" på ${location || 'biografen'}. Samling utanför en stund innan filmen börjar vid ${time || 'utsatt tid'}.`],
+                        'Museum / Utställning': [`Nyfiken på lite kultur? Vi går på museum och kollar in ${title || 'en intressant utställning'} på ${location || 'museet'}. Start runt ${time || 'utsatt tid'}.`],
+                        'Konsert / Gig': [`Livemusik! Vi går och ser ${title || 'ett grymt band'} på ${location || 'scenen'}. Häng på för en oförglömlig kväll! Starttid ${time || 'utsatt tid'}.`],
+                        'Brädspel / Spelkväll': [`Dags för spelkväll! Vi samlas hemma hos mig eller på ${location || 'ett spelcafé'} för lite brädspel och trevligt umgänge. Start ${time || 'utsatt tid'}.`],
+                        'Fotografering': [`Sugen på att fota? Vi tar en fotopromenad runt ${location || 'ett vackert område'} och fångar dagen på bild. Vi börjar vid ${time || 'utsatt tid'}.`],
                         'Annat': [`En avslappnad träff: ${title || ''}. Vi träffas vid ${location || 'utsatt plats'} runt ${time || 'starttid'}. Hoppas vi ses!`]
                     };
                     const categoryTemplates = templates[category] || templates['Annat'];
@@ -383,7 +387,28 @@
                             <div>
                                 <label className="text-sm font-bold text-[#2E2E2E]">Kategori</label>
                                 <select value={category} onChange={e => setCategory(e.target.value)} className="w-full mt-1 p-2 border border-slate-200/80 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C3B37A] bg-white">
-                                    <option>Fika</option> <option>Walk</option> <option>Cinema</option> <option>Sport</option> <option>Middag</option> <option>Lunch</option> <option>Shopping</option> <option>Annat</option>
+                                    <optgroup label="☕ Mat & Dryck">
+                                        <option>Fika</option>
+                                        <option>Äta ute</option>
+                                        <option>Ta ett glas</option>
+                                    </optgroup>
+                                    <optgroup label="🌳 Aktivitet & Natur">
+                                        <option>Promenad</option>
+                                        <option>Träna tillsammans</option>
+                                        <option>Sport</option>
+                                    </optgroup>
+                                    <optgroup label="🎭 Kultur & Nöje">
+                                        <option>Bio</option>
+                                        <option>Museum / Utställning</option>
+                                        <option>Konsert / Gig</option>
+                                    </optgroup>
+                                    <optgroup label="🎲 Hobby & Spel">
+                                        <option>Brädspel / Spelkväll</option>
+                                        <option>Fotografering</option>
+                                    </optgroup>
+                                    <optgroup label="✨ Annat">
+                                        <option>Annat</option>
+                                    </optgroup>
                                 </select>
                             </div>
                             <div>
@@ -890,7 +915,7 @@
                         <div className="flex-grow overflow-y-auto" style={{ height: '100vh' }}>
                             {mainContent}
                         </div>
-                        {view.name === 'home' && (
+                        {['home', 'my-events'].includes(view.name) && (
                                 <button 
                                  onClick={() => handleNavigate('create')} 
                                  className="absolute bottom-24 right-6 w-14 h-14 rounded-full bg-[#C3B37A] text-white shadow-lg flex items-center justify-center hover:opacity-90 transition-opacity"
@@ -917,12 +942,4 @@
     </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
 

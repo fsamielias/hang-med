@@ -110,11 +110,11 @@
                             <button
                                 key={item.view}
                                 onClick={() => onNavigate(item.view)}
-                                className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-colors duration-200 relative ${isActive ? 'text-[#2E2E2E]' : 'text-slate-400 hover:text-[#2E2E2E]'}`}
+                                className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-colors duration-200 relative ${isActive ? 'text-[#C3B37A]' : 'text-slate-400 hover:text-[#C3B37A]'}`}
                             >
                                 <item.icon className="w-6 h-6" />
                                 <span className="text-xs font-bold">{item.label}</span>
-                                {isActive && <div className="absolute -bottom-1 h-1 w-1 bg-[#2E2E2E] rounded-full"></div>}
+                                {isActive && <div className="absolute -bottom-1 h-1 w-1 bg-[#C3B37A] rounded-full"></div>}
                             </button>
                         );
                     })}
@@ -176,7 +176,7 @@
                     {events.sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime)).map(event => {
                         const isJoined = event.attendeeUserIDs.includes(currentUser.userID);
                         return (
-                            <div key={event.eventID} onClick={() => onNavigate('details', event.eventID)} className={`p-4 rounded-xl shadow-sm cursor-pointer transition-all bg-white hover:shadow-md relative border-2 ${isJoined ? 'border-green-500' : 'border-[#5C524F]'}`}>
+                            <div key={event.eventID} onClick={() => onNavigate('details', event.eventID)} className={`p-4 rounded-xl shadow-sm cursor-pointer transition-all bg-white hover:shadow-md relative border-[1mm] ${isJoined ? 'border-green-500' : 'border-[#5C524F]'}`}>
                                 <div className="flex items-start gap-4">
                                     <div className="flex-1">
                                         <p className="font-bold text-[#2E2E2E]">{event.title}</p>
@@ -195,7 +195,7 @@
                                         <span>{event.attendeeUserIDs.length}</span>
                                     </div>
                                 </div>
-                                {isJoined && <div className="absolute bottom-3 right-10 h-3 w-3 bg-green-500 rounded-full ring-2 ring-white"></div>}
+                                
                             </div>
                         )
                     })}
@@ -203,7 +203,7 @@
             </div>
         ));
         
-        const ChatComponent = memo(({ eventId, messages, usersById, currentUser, onSendMessage }) => {
+        const ChatComponent = memo(({ eventId, messages, usersById, currentUser, onSendMessage, hasJoined }) => {
             const [newMessage, setNewMessage] = useState('');
             const chatContainerRef = useRef(null);
 
@@ -221,7 +221,7 @@
                 }
             };
             return (
-                <div className="bg-white p-5 rounded-xl border border-[#5C524F]">
+                <div className={`bg-white p-5 rounded-xl border-[1mm] ${hasJoined ? 'border-green-500' : 'border-[#5C524F]'}`}>
                     <div ref={chatContainerRef} className="space-y-4 max-h-48 overflow-y-auto pr-2">
                         {messages.map(message => {
                             const sender = usersById[message.userID];
@@ -273,7 +273,7 @@
                         </button>
                     </header>
                     <main className="flex-grow overflow-y-auto p-6 space-y-6">
-                        <div className="bg-white p-5 rounded-xl space-y-4 border-2 border-[#5C524F]">
+                        <div className={`bg-white p-5 rounded-xl space-y-4 border-[1mm] ${hasJoined ? 'border-green-500' : 'border-[#5C524F]'}`}>
                             <div className="flex items-center gap-4">
                                 <div><h2 className="text-2xl font-bold text-[#2E2E2E]">{event.title}</h2></div>
                             </div>
@@ -287,7 +287,7 @@
                                 <h3 className="font-semibold mb-2 text-[#2E2E2E]">Vem kommer? ({attendees.length})</h3>
                                 <div className="flex flex-wrap gap-2">
                                     {attendees.map(attendee => attendee && (
-                                        <div key={attendee.userID} className="flex items-center gap-2 pr-3 py-1 bg-slate-100 text-[#2E2E2E] rounded-full text-sm">
+                                        <div key={attendee.userID} className={`flex items-center gap-2 pr-3 py-1 bg-slate-100 text-[#2E2E2E] rounded-full text-sm ${attendee.userID === currentUser.userID ? 'ring-2 ring-[#C3B37A]' : ''}`}>
                                             <div className="w-6 h-6 rounded-full bg-[#F5F5DC] flex items-center justify-center font-bold text-[#2E2E2E]/70 text-xs">
                                                 {attendee.name.charAt(0)}
                                             </div>
@@ -298,9 +298,9 @@
                             </div>
                         </div>
                         {hasJoined ? (
-                            <ChatComponent eventId={eventId} messages={chatMessages[eventId] || []} usersById={usersById} currentUser={currentUser} onSendMessage={onSendMessage} />
+                            <ChatComponent eventId={eventId} messages={chatMessages[eventId] || []} usersById={usersById} currentUser={currentUser} onSendMessage={onSendMessage} hasJoined={hasJoined} />
                         ) : (
-                            <div className="bg-white p-8 rounded-xl shadow-sm text-center border border-[#5C524F]">
+                            <div className="bg-white p-8 rounded-xl shadow-sm text-center border-[1mm] border-[#5C524F]">
                                 <p className="font-semibold text-[#2E2E2E]">Gå med för att se chatten</p>
                                 <p className="text-sm text-[#2E2E2E]/70 mt-1">Prata med andra deltagare genom att anmäla dig till träffen.</p>
                             </div>
@@ -457,7 +457,7 @@
             const EventCard = memo(({event, onNavigate}) => {
                 const isJoined = event.attendeeUserIDs.includes(currentUser.userID);
                 return (
-                     <div onClick={() => onNavigate('details', event.eventID)} className={`p-4 rounded-xl shadow-sm cursor-pointer transition-all bg-white hover:shadow-md relative border-2 ${isJoined ? 'border-green-500' : 'border-gray-300'}`}>
+                     <div onClick={() => onNavigate('details', event.eventID)} className={`p-4 rounded-xl shadow-sm cursor-pointer transition-all bg-white hover:shadow-md relative border-[1mm] ${isJoined ? 'border-green-500' : 'border-gray-300'}`}>
                         <div className="flex items-start gap-4">
                             <div className="flex-1">
                                 <p className="font-bold text-[#2E2E2E]">{event.title}</p>
@@ -476,7 +476,7 @@
                                 <span>{event.attendeeUserIDs.length}</span>
                             </div>
                         </div>
-                        {isJoined && <div className="absolute bottom-3 right-10 h-3 w-3 bg-green-500 rounded-full ring-2 ring-white"></div>}
+                        
                     </div>
                 );
             });
@@ -568,7 +568,7 @@
                         <section className="space-y-3">
                             <h3 className="px-1 text-sm font-semibold text-slate-500 uppercase tracking-wider">Inställningar</h3>
                             <div className="space-y-2">
-                                <SettingItem icon={Icons.calendar} label="Min eventhistorik" onClick={() => onNavigate('my-events')} />
+                                <SettingItem icon={Icons.calendar} label="Min eventhistorik" onClick={() => onNavigate('event-history')} />
                                 <SettingItem icon={Icons.user} label="Redigera profil" onClick={() => {}} />
                                 <SettingItem icon={Icons.settings} label="Notifikationer" onClick={() => {}} />
                             </div>
@@ -583,6 +583,96 @@
                     </main>
                 </div>
             )
+        });
+
+        const EventHistoryScreen = memo(({ events, currentUser, usersById, onNavigate }) => {
+            const historyStats = useMemo(() => {
+                const now = new Date();
+                const pastAttendedEvents = events.filter(e => 
+                    new Date(e.dateTime) < now && 
+                    e.attendeeUserIDs.includes(currentUser.userID)
+                );
+
+                if (pastAttendedEvents.length === 0) {
+                    return { pastAttendedEvents, total: 0, topCategory: 'Ingen än', topCompanion: 'Ingen än' };
+                }
+
+                const categoryCounts = pastAttendedEvents.reduce((acc, event) => {
+                    acc[event.category] = (acc[event.category] || 0) + 1;
+                    return acc;
+                }, {});
+
+                const topCategory = Object.keys(categoryCounts).reduce((a, b) => categoryCounts[a] > categoryCounts[b] ? a : b);
+
+                const companionCounts = pastAttendedEvents
+                    .flatMap(event => event.attendeeUserIDs)
+                    .filter(id => id !== currentUser.userID)
+                    .reduce((acc, id) => {
+                        acc[id] = (acc[id] || 0) + 1;
+                        return acc;
+                    }, {});
+
+                const topCompanionId = Object.keys(companionCounts).reduce((a, b) => companionCounts[a] > companionCounts[b] ? a : b, null);
+                const topCompanion = topCompanionId ? usersById[topCompanionId]?.name : 'Ingen än';
+
+                return {
+                    pastAttendedEvents: pastAttendedEvents.sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime)),
+                    total: pastAttendedEvents.length,
+                    topCategory,
+                    topCompanion
+                };
+            }, [events, currentUser.userID, usersById]);
+
+            const StatCard = ({ label, value }) => (
+                <div className="bg-white p-4 rounded-lg border border-slate-200/60 text-center">
+                    <p className="text-sm text-[#2E2E2E]/80">{label}</p>
+                    <p className="text-xl font-bold text-[#C3B37A]">{value}</p>
+                </div>
+            );
+
+            return (
+                <div className="flex flex-col h-full bg-slate-50">
+                    <header className="p-4 flex items-center gap-4 border-b border-slate-200/50 bg-white/80 backdrop-blur-sm sticky top-0 z-10">
+                        <button onClick={() => onNavigate('profile')} className="p-2 rounded-full hover:bg-slate-100/60">
+                            <Icons.arrowLeft className="w-6 h-6 text-[#2E2E2E]" />
+                        </button>
+                        <h1 className="text-xl font-semibold text-[#C3B37A]">Min Eventhistorik</h1>
+                    </header>
+                    <main className="flex-grow overflow-y-auto p-6 space-y-8">
+                        <section>
+                            <h2 className="text-lg font-bold text-[#2E2E2E] mb-3">Din resa hittills</h2>
+                            <div className="grid grid-cols-3 gap-4">
+                                <StatCard label="Träffar" value={historyStats.total} />
+                                <StatCard label="Favorit" value={historyStats.topCategory} />
+                                <StatCard label="Bästis" value={historyStats.topCompanion} />
+                            </div>
+                        </section>
+                        
+                        <section>
+                             <h2 className="text-lg font-bold text-[#2E2E2E] mb-3">Tidslinje</h2>
+                             {historyStats.pastAttendedEvents.length > 0 ? (
+                                <div className="space-y-3">
+                                    {historyStats.pastAttendedEvents.map(event => (
+                                        <div key={event.eventID} className="bg-white p-3 rounded-lg border border-slate-200/60 flex items-center gap-4">
+                                            <div className="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center">
+                                                <Icons.calendar className="w-5 h-5 text-slate-500" />
+                                            </div>
+                                            <div>
+                                                <p className="font-semibold text-[#2E2E2E]">{event.title}</p>
+                                                <p className="text-sm text-slate-500">{formatDateTime(event.dateTime)}</p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                             ) : (
+                                <div className="text-center py-10">
+                                    <p className="text-slate-500">Du har inte deltagit i några träffar än.</p>
+                                </div>
+                             )}
+                        </section>
+                    </main>
+                </div>
+            );
         });
 
         const Toast = ({ message, show }) => {
@@ -619,7 +709,7 @@
                         {joinedEvents.length > 0 ? (
                             joinedEvents.map(event => {
                                 return (
-                                    <div key={event.eventID} className="bg-white rounded-lg shadow-sm transition-all border-2 border-green-500">
+                                    <div key={event.eventID} className="bg-white rounded-lg shadow-sm transition-all border-[1mm] border-green-500">
                                         <div onClick={() => handleToggleChat(event.eventID)} className="p-4 cursor-pointer hover:bg-slate-100/60 relative">
                                             <div className="flex items-start gap-4">
                                                 <div className="flex-1">
@@ -639,11 +729,11 @@
                                                     <span>{event.attendeeUserIDs.length}</span>
                                                 </div>
                                             </div>
-                                            <div className="absolute bottom-3 right-10 h-3 w-3 bg-green-500 rounded-full ring-2 ring-white"></div>
+                                            
                                         </div>
                                         {expandedChatId === event.eventID && (
                                             <div className="p-4 border-t border-slate-200/80">
-                                                 <ChatComponent eventId={event.eventID} messages={chatMessages[event.eventID] || []} usersById={usersById} currentUser={currentUser} onSendMessage={onSendMessage} />
+                                                 <ChatComponent eventId={event.eventID} messages={chatMessages[event.eventID] || []} usersById={usersById} currentUser={currentUser} onSendMessage={onSendMessage} hasJoined={true} />
                                             </div>
                                         )}
                                     </div>
@@ -786,11 +876,14 @@
                     case 'profile':
                         mainContent = <ProfileScreen events={events} currentUser={currentUser} onLogout={handleLogout} onNavigate={handleNavigate} />;
                         break;
+                    case 'event-history':
+                        mainContent = <EventHistoryScreen events={events} currentUser={currentUser} usersById={usersById} onNavigate={handleNavigate} />;
+                        break;
                     default:
                         mainContent = <HomeScreen events={events} onNavigate={handleNavigate} currentUser={currentUser} />;
                 }
 
-                const showBottomNav = ['home', 'my-events', 'chat', 'profile', 'create'].includes(view.name);
+                const showBottomNav = ['home', 'my-events', 'chat', 'profile', 'create', 'details'].includes(view.name);
                 
                 return (
                     <div className="h-full flex flex-col relative">
@@ -824,4 +917,12 @@
     </script>
 </body>
 </html>
+
+
+
+
+
+
+
+
 

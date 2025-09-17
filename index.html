@@ -54,7 +54,7 @@
 
     <script type="text/babel">
         // --- CONSTANTS & HELPER DATA (Moved outside component for efficiency) ---
-        const { useState, useEffect, useRef, memo, useMemo } = React;
+        const { useState, useEffect, useRef, memo, useMemo, useLayoutEffect } = React;
 
         const USERS_DATA = [
             { userID: 1, name: 'Sofia', email: 'sofia@example.com' },
@@ -284,11 +284,11 @@
             
             return (
                 <div className="flex flex-col h-full bg-white">
-                    <header className="p-6 pb-2 border-b border-slate-200/50 bg-white/80 backdrop-blur-sm sticky top-0 z-10">
-                        <h1 className="text-3xl font-bold text-salviagron">Träffar</h1>
-                        <p className="text-[#2E2E2E] mt-1">Hej {currentUser.name}, hitta eller skapa något att göra!</p>
+                    <header className="p-4 border-b border-slate-200/50 bg-white/80 backdrop-blur-sm sticky top-0 z-10">
+                        <h1 className="text-2xl font-bold text-salviagron">Träffar</h1>
+                        <p className="text-sm text-[#2E2E2E] mt-1">Hej {currentUser.name}, hitta eller skapa något att göra!</p>
                     </header>
-                    <div className="px-6 py-3 border-b border-slate-200/50 sticky top-[98px] bg-white/80 backdrop-blur-sm z-10">
+                    <div className="px-4 py-2 border-b border-slate-200/50 sticky top-[80px] bg-white/80 backdrop-blur-sm z-10">
                         <div className="flex space-x-2 overflow-x-auto pb-2 no-scrollbar">
                             {filters.map(filter => (
                                 <button
@@ -301,7 +301,7 @@
                             ))}
                         </div>
                     </div>
-                    <main className="flex-grow overflow-y-auto p-6 space-y-4">
+                    <main className="flex-grow overflow-y-auto p-4 space-y-4">
                         {filteredEvents.map(event => {
                             const isJoined = event.attendeeUserIDs.includes(currentUser.userID);
                             const isCreator = event.creatorUserID === currentUser.userID;
@@ -337,11 +337,10 @@
             );
         });
         
-        const ChatComponent = memo(({ eventId, messages, usersById, currentUser, onSendMessage, hasJoined, isCreator }) => {
+        const ChatComponent = memo(({ eventId, messages, usersById, currentUser, onSendMessage }) => {
             const [newMessage, setNewMessage] = useState('');
             const chatContainerRef = useRef(null);
-            
-            const borderColor = isCreator ? 'border-blue-400' : hasJoined ? 'border-green-500' : 'border-[#5C524F]';
+            const inputRef = useRef(null);
 
             useEffect(() => {
                 if (chatContainerRef.current) {
@@ -354,24 +353,23 @@
                 if (newMessage.trim()) {
                     onSendMessage(eventId, newMessage);
                     setNewMessage('');
+                    inputRef.current?.focus();
                 }
             };
             return (
-                <div className={`bg-white p-5 rounded-xl border-[1mm] ${borderColor}`}>
-                    <div ref={chatContainerRef} className="space-y-4 max-h-48 overflow-y-auto pr-2">
+                <div className="flex-grow flex flex-col overflow-hidden">
+                    <div ref={chatContainerRef} className="flex-1 overflow-y-auto space-y-3 p-2 flex flex-col">
+                        <div className="flex-grow"></div>
                         {messages.map(message => {
                             const sender = usersById[message.userID];
                             const isCurrentUser = sender.userID === currentUser.userID;
                             return (
                                 <div key={message.messageID} className={`flex items-start gap-2 ${isCurrentUser ? 'justify-end' : 'justify-start'}`}>
-                                    {/* Avatar for other users */}
                                     {!isCurrentUser && (
                                         <div className="w-8 h-8 rounded-full bg-[#F5F5DC] flex items-center justify-center font-bold text-[#2E2E2E]/70 text-sm flex-shrink-0">
                                             {sender.name.charAt(0)}
                                         </div>
                                     )}
-
-                                    {/* Message bubble with optional name */}
                                     <div className={`flex flex-col ${isCurrentUser ? 'items-end' : 'items-start'}`}>
                                         {!isCurrentUser && (
                                             <span className="text-xs text-slate-500 mb-0.5 ml-3">{sender.name}</span>
@@ -385,15 +383,16 @@
                         })}
                         {messages.length === 0 && <p className="text-sm text-slate-400 text-center py-4">Inga meddelanden än. Bli den första att skriva!</p>}
                     </div>
-                     <form onSubmit={handleSend} className="mt-4 flex items-center gap-2">
-                        <input 
-                            type="text" 
+                     <form onSubmit={handleSend} className="p-2 flex-shrink-0 relative">
+                        <textarea 
+                            ref={inputRef}
                             value={newMessage}
                             onChange={(e) => setNewMessage(e.target.value)}
                             placeholder="Skriv ett meddelande..."
-                            className="w-full p-2 border border-slate-200/80 rounded-full focus:outline-none focus:ring-2 focus:ring-salviagron bg-white"
-                        />
-                        <button type="submit" className="p-2.5 rounded-full bg-salviagron text-white hover:opacity-90 transition-opacity">
+                            className="w-full p-3 pr-14 border border-slate-200/80 rounded-xl focus:outline-none focus:ring-2 focus:ring-salviagron bg-white resize-none"
+                            rows="2"
+                        ></textarea>
+                        <button type="submit" className="absolute top-3 right-3 p-2 rounded-full bg-salviagron text-white hover:opacity-90 transition-opacity">
                             <Icons.send className="w-5 h-5" />
                         </button>
                     </form>
@@ -401,7 +400,7 @@
             );
         });
         
-        const EventDetailsScreen = memo(({ eventId, events, usersById, currentUser, onJoin, onLeave, onNavigate, chatMessages, onSendMessage }) => {
+        const EventDetailsScreen = memo(({ eventId, events, usersById, currentUser, onJoin, onLeave, onNavigate, onBack, chatMessages, onSendMessage }) => {
             const event = events.find(e => e.eventID === eventId);
             if (!event) return <div className="p-4">Träffen hittades inte.</div>;
             
@@ -409,21 +408,20 @@
             const attendees = event.attendeeUserIDs.map(id => usersById[id]);
             const hasJoined = event.attendeeUserIDs.includes(currentUser.userID);
             const isCreator = currentUser.userID === event.creatorUserID;
-            const borderColor = isCreator ? 'border-blue-400' : hasJoined ? 'border-green-500' : 'border-[#5C524F]';
             
             return (
                 <div className="flex flex-col h-full bg-white">
                     <header className="p-4 flex items-center justify-between border-b border-slate-200/50 bg-white/50 backdrop-blur-sm">
-                        <button onClick={() => onNavigate('home')} className="p-2 rounded-full hover:bg-slate-100/60">
+                        <button onClick={onBack} className="p-2 rounded-full hover:bg-slate-100/60">
                             <Icons.arrowLeft className="w-6 h-6 text-[#2E2E2E]" />
                         </button>
                         <div className="flex-1"></div> {/* Spacer */}
                         
                     </header>
-                    <main className="flex-grow overflow-y-auto p-6 space-y-6">
-                        <div className={`bg-white p-5 rounded-xl space-y-4 border-[1mm] ${borderColor}`}>
+                    <main className="flex-grow overflow-y-auto p-4 space-y-4">
+                        <div className={`bg-white p-4 rounded-xl space-y-3 shadow-lg`}>
                             <div className="flex items-center gap-4">
-                                <div className="min-w-0"><h2 className="text-2xl font-bold text-[#2E2E2E] break-words">{event.title}</h2></div>
+                                <div className="min-w-0"><h2 className="text-xl font-bold text-[#2E2E2E] break-words">{event.title}</h2></div>
                             </div>
                             <p className="text-[#2E2E2E]/80 break-words">{event.description}</p>
                             <div className="space-y-3 pt-2 text-[#2E2E2E]">
@@ -431,27 +429,19 @@
                                 <div className="flex items-center gap-3"><Icons.mapPin className="w-5 h-5 text-[#2E2E2E]/60" /><span className="break-words min-w-0">{event.location}</span></div>
                                 <div className="flex items-center gap-3"><Icons.user className="w-5 h-5 text-[#2E2E2E]/60" /><span>Skapad av <strong>{creator?.name || 'Okänd'}</strong></span></div>
                             </div>
-                            <div>
-                                <h3 className="font-semibold mb-2 text-[#2E2E2E]">Vem kommer? ({attendees.length})</h3>
-                                <div className="flex flex-wrap gap-2">
-                                    {attendees.map(attendee => attendee && (
-                                        <div key={attendee.userID} className={`flex items-center gap-2 pr-3 py-1 bg-slate-100 text-[#2E2E2E] rounded-full text-sm ${attendee.userID === currentUser.userID ? 'ring-2 ring-salviagron' : ''}`}>
-                                            <div className="w-6 h-6 rounded-full bg-[#F5F5DC] flex items-center justify-center font-bold text-[#2E2E2E]/70 text-xs">
-                                                {attendee.name.charAt(0)}
-                                            </div>
-                                            {attendee.name}
+                            <div className="flex flex-wrap gap-2 pt-2">
+                                {attendees.map(attendee => attendee && (
+                                    <div key={attendee.userID} className={`flex items-center gap-2 pr-3 py-1 bg-slate-100 text-[#2E2E2E] rounded-full text-sm ${attendee.userID === currentUser.userID ? 'ring-2 ring-salviagron' : ''}`}>
+                                        <div className="w-6 h-6 rounded-full bg-[#F5F5DC] flex items-center justify-center font-bold text-[#2E2E2E]/70 text-xs">
+                                            {attendee.name.charAt(0)}
                                         </div>
-                                    ))}
-                                </div>
+                                        {attendee.name}
+                                    </div>
+                                ))}
                             </div>
                         </div>
-                        {hasJoined ? (
-                            <ChatComponent eventId={eventId} messages={chatMessages[eventId] || []} usersById={usersById} currentUser={currentUser} onSendMessage={onSendMessage} hasJoined={hasJoined} isCreator={isCreator} />
-                        ) : (
-                            <div className="bg-white p-8 rounded-xl shadow-sm text-center border-[1mm] border-[#5C524F]">
-                                <p className="font-semibold text-[#2E2E2E]">Gå med för att se chatten</p>
-                                <p className="text-sm text-[#2E2E2E]/70 mt-1">Prata med andra deltagare genom att anmäla dig till träffen.</p>
-                            </div>
+                        {hasJoined && (
+                            <ActionButton onClick={() => onNavigate('chat-detail', event.eventID)}>Visa chatt</ActionButton>
                         )}
                     </main>
                     <footer className="p-4 bg-white/80 backdrop-blur-sm border-t border-slate-200/50">
@@ -472,7 +462,7 @@
             );
         });
 
-        const CreateEventScreen = memo(({ currentUser, onCreate, onNavigate }) => {
+        const CreateEventScreen = memo(({ currentUser, onCreate, onNavigate, onBack }) => {
             const [title, setTitle] = useState('');
             const [category, setCategory] = useState('Fika');
             const [location, setLocation] = useState('');
@@ -522,13 +512,13 @@
             return (
                 <div className="flex flex-col h-full bg-white">
                     <header className="p-4 flex items-center justify-between border-b border-slate-200/50 bg-white/50 backdrop-blur-sm sticky top-0">
-                        <button onClick={() => onNavigate('home')} className="p-2 rounded-full hover:bg-slate-100/60">
+                        <button onClick={onBack} className="p-2 rounded-full hover:bg-slate-100/60">
                              <Icons.arrowLeft className="w-6 h-6 text-[#2E2E2E]" />
                         </button>
                         <h1 className="text-xl font-semibold text-salviagron">Skapa ny träff</h1>
                         <div className="w-10"></div>
                     </header>
-                    <main className="flex-grow overflow-y-auto p-6">
+                    <main className="flex-grow overflow-y-auto p-4">
                         <form onSubmit={handleSubmit} className="space-y-4">
                             <div>
                                 <label className="text-sm font-bold text-[#2E2E2E]">Titel</label>
@@ -595,7 +585,7 @@
             );
         });
         
-         const EditEventScreen = memo(({ eventId, events, onUpdate, onDelete, onNavigate }) => {
+         const EditEventScreen = memo(({ eventId, events, onUpdate, onDelete, onNavigate, onBack }) => {
             const eventToEdit = useMemo(() => events.find(e => e.eventID === eventId), [events, eventId]);
 
             const [title, setTitle] = useState('');
@@ -644,13 +634,13 @@
             return (
                 <div className="flex flex-col h-full bg-white">
                     <header className="p-4 flex items-center justify-between border-b border-slate-200/50 bg-white/50 backdrop-blur-sm sticky top-0">
-                        <button onClick={() => onNavigate('details', eventId)} className="p-2 rounded-full hover:bg-slate-100/60">
+                        <button onClick={onBack} className="p-2 rounded-full hover:bg-slate-100/60">
                              <Icons.arrowLeft className="w-6 h-6 text-[#2E2E2E]" />
                         </button>
                         <h1 className="text-xl font-semibold text-salviagron">Redigera träff</h1>
                         <div className="w-10"></div>
                     </header>
-                    <main className="flex-grow overflow-y-auto p-6">
+                    <main className="flex-grow overflow-y-auto p-4">
                         <form onSubmit={handleSubmit} className="space-y-4">
                             <div>
                                 <label className="text-sm font-bold text-[#2E2E2E]">Titel</label>
@@ -807,8 +797,8 @@
             
             return (
                 <div className="flex flex-col h-full bg-white">
-                    <header className="p-6 border-b border-slate-200/50 bg-white/80 backdrop-blur-sm sticky top-0 z-10"><h1 className="text-3xl font-bold text-salviagron">Mina träffar</h1></header>
-                    <main className="flex-grow overflow-y-auto p-6 space-y-8">
+                    <header className="p-4 border-b border-slate-200/50 bg-white/80 backdrop-blur-sm sticky top-0 z-10"><h1 className="text-2xl font-bold text-salviagron">Mina träffar</h1></header>
+                    <main className="flex-grow overflow-y-auto p-4 space-y-6">
                          <div>
                             <h2 className="text-lg font-bold text-[#2E2E2E] mb-3">På gång för mig ({categorizedEvents.upcomingJoined.length})</h2>
                             {categorizedEvents.upcomingJoined.length > 0 ? (
@@ -860,10 +850,10 @@
 
             return (
                 <div className="flex flex-col h-full bg-slate-50">
-                    <header className="p-6 bg-white border-b border-slate-200/50">
-                        <h1 className="text-3xl font-bold text-salviagron">Profil</h1>
+                    <header className="p-4 bg-white border-b border-slate-200/50">
+                        <h1 className="text-2xl font-bold text-salviagron">Profil</h1>
                     </header>
-                    <main className="flex-grow overflow-y-auto p-6 space-y-8">
+                    <main className="flex-grow overflow-y-auto p-4 space-y-6">
                         <section className="flex flex-col items-center text-center space-y-2">
                              <div className="w-24 h-24 rounded-full bg-[#F5F5DC] flex items-center justify-center text-4xl font-bold text-[#2E2E2E] ring-4 ring-white/50 shadow-sm">{currentUser.name.charAt(0)}</div>
                              <h2 className="text-2xl font-bold text-[#2E2E2E] pt-2">{currentUser.name}</h2>
@@ -901,7 +891,7 @@
             )
         });
 
-        const EventHistoryScreen = memo(({ events, currentUser, usersById, onNavigate }) => {
+        const EventHistoryScreen = memo(({ events, currentUser, usersById, onNavigate, onBack }) => {
             const historyStats = useMemo(() => {
                 const now = new Date();
                 const pastAttendedEvents = events.filter(e => 
@@ -949,12 +939,12 @@
             return (
                 <div className="flex flex-col h-full bg-slate-50">
                     <header className="p-4 flex items-center gap-4 border-b border-slate-200/50 bg-white/80 backdrop-blur-sm sticky top-0 z-10">
-                        <button onClick={() => onNavigate('profile')} className="p-2 rounded-full hover:bg-slate-100/60">
+                        <button onClick={onBack} className="p-2 rounded-full hover:bg-slate-100/60">
                             <Icons.arrowLeft className="w-6 h-6 text-[#2E2E2E]" />
                         </button>
                         <h1 className="text-xl font-semibold text-salviagron">Min Eventhistorik</h1>
                     </header>
-                    <main className="flex-grow overflow-y-auto p-6 space-y-8">
+                    <main className="flex-grow overflow-y-auto p-4 space-y-6">
                         <section>
                             <h2 className="text-lg font-bold text-[#2E2E2E] mb-3">Din resa hittills</h2>
                             <div className="grid grid-cols-3 gap-4">
@@ -996,9 +986,7 @@
             return (<div className="fixed bottom-24 left-1/2 -translate-x-1/2 bg-[#3D3D3D] text-white px-4 py-2 rounded-full text-sm shadow-lg animate-fade-in-out">{message}</div>);
         };
 
-        const ChatListScreen = memo(({ events, currentUser, onNavigate, chatMessages, onSendMessage, usersById }) => {
-            const [expandedChatId, setExpandedChatId] = useState(null);
-            
+        const ChatListScreen = memo(({ events, currentUser, onNavigate, usersById }) => {
             const { createdChats, attendingChats } = useMemo(() => {
                 const joinedEvents = events
                     .filter(e => e.attendeeUserIDs.includes(currentUser.userID))
@@ -1010,17 +998,12 @@
                 return { createdChats: created, attendingChats: attending };
             }, [events, currentUser.userID]);
 
-            const handleToggleChat = (eventId) => {
-                setExpandedChatId(prevId => prevId === eventId ? null : eventId);
-            };
 
             const ChatEventCard = ({ event }) => {
                 const isCreator = event.creatorUserID === currentUser.userID;
-                const attendees = event.attendeeUserIDs.map(id => usersById[id]);
-
                 return (
-                    <div className={`bg-white rounded-lg shadow-lg transition-all`}>
-                        <div onClick={() => handleToggleChat(event.eventID)} className="p-4 cursor-pointer hover:bg-slate-100/60 relative">
+                    <div onClick={() => onNavigate('chat-detail', event.eventID)} className={`bg-white rounded-lg shadow-lg transition-all cursor-pointer hover:bg-slate-50`}>
+                        <div className="p-4 relative">
                             <div className={`absolute bottom-3 right-3 h-4 w-4 rounded-full ring-2 ring-white ${isCreator ? 'bg-blue-400' : 'bg-green-500'}`}></div>
                             <div className="flex items-start gap-4">
                                 <div className="flex-1 min-w-0">
@@ -1040,25 +1023,7 @@
                                     <span>{event.attendeeUserIDs.length}</span>
                                 </div>
                             </div>
-                            <div className="mt-3 pt-3 border-t border-slate-200/60">
-                                 <h4 className="text-sm font-semibold text-slate-600 mb-2">Deltagare</h4>
-                                 <div className="flex flex-wrap gap-2">
-                                    {attendees.map(attendee => attendee && (
-                                        <div key={attendee.userID} className={`flex items-center gap-2 pr-3 py-1 bg-slate-100 text-[#2E2E2E] rounded-full text-sm`}>
-                                            <div className="w-6 h-6 rounded-full bg-[#F5F5DC] flex items-center justify-center font-bold text-[#2E2E2E]/70 text-xs">
-                                                {attendee.name.charAt(0)}
-                                            </div>
-                                            {attendee.name}
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
                         </div>
-                        {expandedChatId === event.eventID && (
-                            <div className="p-4 border-t border-slate-200/80">
-                                 <ChatComponent eventId={event.eventID} messages={chatMessages[event.eventID] || []} usersById={usersById} currentUser={currentUser} onSendMessage={onSendMessage} hasJoined={true} isCreator={isCreator} />
-                            </div>
-                        )}
                     </div>
                 );
             };
@@ -1072,10 +1037,10 @@
 
             return (
                 <div className="flex flex-col h-full bg-white">
-                    <header className="p-6 border-b border-slate-200/50 bg-white/80 backdrop-blur-sm sticky top-0 z-10">
-                        <h1 className="text-3xl font-bold text-salviagron">Chattar</h1>
+                    <header className="p-4 border-b border-slate-200/50 bg-white/80 backdrop-blur-sm sticky top-0 z-10">
+                        <h1 className="text-2xl font-bold text-salviagron">Chattar</h1>
                     </header>
-                    <main className="flex-grow overflow-y-auto p-6 space-y-8">
+                    <main className="flex-grow overflow-y-auto p-4 space-y-6">
                         <div>
                             <h2 className="text-lg font-bold text-[#2E2E2E] mb-3">På gång för mig ({attendingChats.length})</h2>
                             {attendingChats.length > 0 ? (
@@ -1104,14 +1069,62 @@
                 </div>
             );
         });
+
+        const ChatDetailScreen = memo(({ eventId, events, usersById, currentUser, chatMessages, onSendMessage, onBack }) => {
+            const event = useMemo(() => events.find(e => e.eventID === eventId), [events, eventId]);
+
+            if (!event) {
+                useEffect(() => onBack(), [onBack]);
+                return null;
+            }
+             
+            const attendees = event.attendeeUserIDs.map(id => usersById[id]);
+            const isCreator = currentUser.userID === event.creatorUserID;
+            const hasJoined = true; // By definition, if you're in the chat detail screen, you've joined.
+
+            return (
+                <div className="flex flex-col h-full bg-white">
+                    <header className="p-4 flex items-center gap-4 border-b border-slate-200/50 bg-white/80 backdrop-blur-sm sticky top-0 z-10">
+                         <button onClick={onBack} className="p-2 rounded-full hover:bg-slate-100/60">
+                            <Icons.arrowLeft className="w-6 h-6 text-[#2E2E2E]" />
+                        </button>
+                        <h1 className="text-lg font-bold text-[#2E2E2E] truncate">{event.title}</h1>
+                    </header>
+                    <main className="flex-grow flex flex-col p-4 space-y-4 overflow-hidden">
+                        <p className="text-sm text-slate-500 break-words flex-shrink-0">{event.description}</p>
+                        <div className="flex-shrink-0">
+                             <div className="flex flex-wrap gap-2">
+                                {attendees.map(attendee => attendee && (
+                                    <div key={attendee.userID} className={`flex items-center gap-2 pr-3 py-1 bg-slate-100 text-[#2E2E2E] rounded-full text-sm`}>
+                                        <div className="w-6 h-6 rounded-full bg-[#F5F5DC] flex items-center justify-center font-bold text-[#2E2E2E]/70 text-xs">
+                                            {attendee.name.charAt(0)}
+                                        </div>
+                                        {attendee.name}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                        <ChatComponent 
+                            eventId={eventId} 
+                            messages={chatMessages[eventId] || []} 
+                            usersById={usersById} 
+                            currentUser={currentUser} 
+                            onSendMessage={onSendMessage} 
+                        />
+                    </main>
+                </div>
+            )
+        });
         
         function App() {
+            const [viewStack, setViewStack] = useState([{ name: 'login', payload: null }]);
             const [currentUser, setCurrentUser] = useState(null);
             const [users, setUsers] = useState(USERS_DATA);
             const [events, setEvents] = useState(INITIAL_EVENTS_DATA);
-            const [view, setView] = useState({ name: 'login', payload: null });
             const [chatMessages, setChatMessages] = useState(INITIAL_CHAT_MESSAGES_DATA);
             const [toast, setToast] = useState({ show: false, message: '' });
+
+            const currentView = viewStack[viewStack.length - 1];
 
             const usersById = useMemo(() => 
                 users.reduce((acc, user) => {
@@ -1136,21 +1149,29 @@
 
             const handleLogin = (user) => {
                 setCurrentUser(user);
-                setView({ name: 'home', payload: null });
+                setViewStack([{ name: 'home', payload: null }]);
             };
             
             const handleLogout = () => {
                 setCurrentUser(null);
-               setView({ name: 'login', payload: null });
+               setViewStack([{ name: 'login', payload: null }]);
             };
 
             const handleNavigate = (viewName, payload = null) => {
-                setView({ name: viewName, payload });
+                setViewStack(prevStack => [...prevStack, { name: viewName, payload }]);
+            };
+            
+            const handleTabNavigate = (viewName) => {
+                 setViewStack([{ name: viewName, payload: null }]);
+            };
+
+            const handleBack = () => {
+                setViewStack(prevStack => prevStack.length > 1 ? prevStack.slice(0, -1) : prevStack);
             };
             
             const handleCreateEvent = (newEvent) => {
                 setEvents(prevEvents => [newEvent, ...prevEvents]);
-                handleNavigate('home');
+                setViewStack([{ name: 'home', payload: null }]);
                 showToast('Din träff har skapats!');
             };
 
@@ -1158,13 +1179,13 @@
                 setEvents(prevEvents => prevEvents.map(event => 
                     event.eventID === updatedEvent.eventID ? updatedEvent : event
                 ));
-                handleNavigate('details', updatedEvent.eventID);
+                handleBack();
                 showToast('Träffen har uppdaterats!');
             };
 
             const handleDeleteEvent = (eventId) => {
                 setEvents(prevEvents => prevEvents.filter(event => event.eventID !== eventId));
-                handleNavigate('home');
+                setViewStack([{ name: 'home', payload: null }]);
                 showToast('Träffen har tagits bort.');
             };
 
@@ -1196,7 +1217,7 @@
                 };
                 setUsers(prevUsers => [...prevUsers, newUser]);
                 setCurrentUser(newUser);
-               setView({ name: 'home', payload: null });
+               setViewStack([{ name: 'home', payload: null }]);
             };
 
             const handleSendMessage = (eventId, text) => {
@@ -1214,7 +1235,7 @@
 
             const renderView = () => {
                 if (!currentUser) {
-                    switch(view.name) {
+                    switch(currentView.name) {
                         case 'signup':
                             return <SignUpScreen onSignUp={handleSignUp} onNavigate={handleNavigate} />;
                         default:
@@ -1223,56 +1244,70 @@
                 }
                 
                 let mainContent;
-                switch (view.name) {
+                switch (currentView.name) {
                     case 'details':
                         mainContent = <EventDetailsScreen 
-                            eventId={view.payload} 
+                            eventId={currentView.payload} 
                             events={events} 
                             usersById={usersById} 
                             currentUser={currentUser} 
                             onJoin={handleJoinEvent} 
                             onLeave={handleLeaveEvent}
                             onNavigate={handleNavigate}
+                            onBack={handleBack}
                             chatMessages={chatMessages}
                             onSendMessage={handleSendMessage}
                         />;
                         break;
                     case 'create':
-                        mainContent = <CreateEventScreen currentUser={currentUser} onCreate={handleCreateEvent} onNavigate={handleNavigate} />;
+                        mainContent = <CreateEventScreen currentUser={currentUser} onCreate={handleCreateEvent} onNavigate={handleNavigate} onBack={handleBack} />;
                         break;
                     case 'edit-event':
                         mainContent = <EditEventScreen 
-                            eventId={view.payload}
+                            eventId={currentView.payload}
                             events={events}
                             onUpdate={handleUpdateEvent}
                             onDelete={handleDeleteEvent}
                             onNavigate={handleNavigate}
+                            onBack={handleBack}
                         />;
                         break;
                     case 'my-events':
                         mainContent = <MyEventsScreen events={events} currentUser={currentUser} onNavigate={handleNavigate} />;
                         break;
                     case 'chat':
-                        mainContent = <ChatListScreen events={events} currentUser={currentUser} onNavigate={handleNavigate} chatMessages={chatMessages} onSendMessage={handleSendMessage} usersById={usersById} />;
+                        mainContent = <ChatListScreen events={events} currentUser={currentUser} onNavigate={handleNavigate} usersById={usersById} />;
+                        break;
+                    case 'chat-detail':
+                        mainContent = <ChatDetailScreen 
+                            eventId={currentView.payload} 
+                            events={events} 
+                            usersById={usersById} 
+                            currentUser={currentUser} 
+                            chatMessages={chatMessages}
+                            onSendMessage={handleSendMessage}
+                            onBack={handleBack}
+                        />;
                         break;
                     case 'profile':
                         mainContent = <ProfileScreen events={events} currentUser={currentUser} onLogout={handleLogout} onNavigate={handleNavigate} />;
                         break;
                     case 'event-history':
-                        mainContent = <EventHistoryScreen events={events} currentUser={currentUser} usersById={usersById} onNavigate={handleNavigate} />;
+                        mainContent = <EventHistoryScreen events={events} currentUser={currentUser} usersById={usersById} onNavigate={handleNavigate} onBack={handleBack} />;
                         break;
                     default:
                         mainContent = <HomeScreen events={events} onNavigate={handleNavigate} currentUser={currentUser} />;
                 }
 
-                const showBottomNav = ['home', 'my-events', 'chat', 'profile', 'create', 'details', 'edit-event'].includes(view.name);
+                const showBottomNav = true;
+                const activeNav = currentView.name === 'chat-detail' ? 'chat' : currentView.name;
                 
                 return (
                     <div className="h-full flex flex-col relative">
-                        <div className="flex-grow overflow-y-auto" style={{ height: '100vh' }}>
+                        <div id="main-app-scroller" className="flex-grow overflow-y-auto" style={{ height: '100vh' }}>
                             {mainContent}
                         </div>
-                        {['home', 'my-events'].includes(view.name) && (
+                        {['home', 'my-events'].includes(currentView.name) && (
                                 <button 
                                  onClick={() => handleNavigate('create')} 
                                  className="absolute bottom-24 right-6 w-14 h-14 rounded-full bg-salviagron text-white shadow-lg flex items-center justify-center hover:opacity-90 transition-opacity"
@@ -1280,7 +1315,7 @@
                                 <Icons.plus className="w-8 h-8" />
                             </button>
                         )}
-                        {showBottomNav && <BottomNav activeView={view.name} onNavigate={handleNavigate} />}
+                        {showBottomNav && <BottomNav activeView={activeNav} onNavigate={handleTabNavigate} />}
                     </div>
                 );
             };
@@ -1299,4 +1334,8 @@
     </script>
 </body>
 </html>
+
+
+
+
 

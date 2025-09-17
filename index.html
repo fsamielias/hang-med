@@ -24,6 +24,14 @@
         input[type="date"], input[type="time"] {
             -webkit-appearance: none;
         }
+        /* Hide scrollbar for filter bar */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
     </style>
 </head>
 <body class="bg-white">
@@ -52,6 +60,14 @@
         const INITIAL_CHAT_MESSAGES_DATA = {
             101: [{ messageID: 1, userID: 2, text: "Ska bli så mysigt! Jag är där prick kl 10.", timestamp: "2025-09-20T09:30:00" }, { messageID: 2, userID: 5, text: "Absolut, jag ser fram emot det!", timestamp: "2025-09-20T09:32:00" }],
             102: [{ messageID: 3, userID: 1, text: "Vilket härligt väder det ser ut att bli!", timestamp: "2025-09-21T10:00:00" }]
+        };
+
+        const CATEGORY_MAP = {
+            'Mat & Dryck': ['Fika', 'Äta ute', 'Ta ett glas'],
+            'Aktivitet & Natur': ['Promenad', 'Träna tillsammans', 'Sport'],
+            'Kultur & Nöje': ['Bio', 'Museum / Utställning', 'Konsert / Gig'],
+            'Hobby & Spel': ['Brädspel / Spelkväll', 'Fotografering'],
+            'Annat': ['Annat']
         };
 
         // --- UTILITY FUNCTIONS ---
@@ -98,6 +114,76 @@
             </button>
         ));
 
+        const SwipeButton = ({ onSuccess, text }) => {
+            const [thumbPosition, setThumbPosition] = useState(0);
+            const [isSwiping, setIsSwiping] = useState(false);
+            const [isCompleted, setIsCompleted] = useState(false);
+            const trackRef = useRef(null);
+            const thumbRef = useRef(null);
+            
+            const handleSwipeStart = (e) => {
+                if (isCompleted) return;
+                setIsSwiping(true);
+                thumbRef.current.style.transition = 'none';
+                document.addEventListener('mousemove', handleSwipeMove);
+                document.addEventListener('touchmove', handleSwipeMove, { passive: false });
+                document.addEventListener('mouseup', handleSwipeEnd);
+                document.addEventListener('touchend', handleSwipeEnd);
+            };
+
+            const handleSwipeMove = (e) => {
+                e.preventDefault();
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const trackRect = trackRef.current.getBoundingClientRect();
+                const thumbWidth = thumbRef.current.offsetWidth;
+                let newX = clientX - trackRect.left - (thumbWidth / 2);
+                const maxPosition = trackRect.width - thumbWidth;
+                newX = Math.max(0, Math.min(newX, maxPosition));
+                setThumbPosition(newX);
+            };
+
+            const handleSwipeEnd = () => {
+                document.removeEventListener('mousemove', handleSwipeMove);
+                document.removeEventListener('touchmove', handleSwipeMove);
+                document.removeEventListener('mouseup', handleSwipeEnd);
+                document.removeEventListener('touchend', handleSwipeEnd);
+
+                if (!isSwiping) return;
+
+                setIsSwiping(false);
+                thumbRef.current.style.transition = 'transform 0.3s ease-out';
+                const trackWidth = trackRef.current.offsetWidth;
+                const thumbWidth = thumbRef.current.offsetWidth;
+                const successThreshold = trackWidth - thumbWidth - 5;
+
+                if (thumbPosition >= successThreshold) {
+                    setThumbPosition(trackWidth - thumbWidth);
+                    setIsCompleted(true);
+                    onSuccess();
+                } else {
+                    setThumbPosition(0);
+                }
+            };
+
+            return (
+                <div ref={trackRef} className="w-full h-[52px] bg-green-200 rounded-full relative flex items-center justify-center overflow-hidden select-none cursor-grab active:cursor-grabbing">
+                    <span className={`z-10 text-green-800 font-bold transition-opacity duration-300 ${isSwiping || isCompleted ? 'opacity-0' : 'opacity-100'}`}>
+                        {text}
+                    </span>
+                    <div 
+                        ref={thumbRef}
+                        className="w-[52px] h-[52px] bg-green-500 rounded-full absolute top-0 left-0 flex items-center justify-center shadow-md border-4 border-green-200"
+                        style={{ transform: `translateX(${thumbPosition}px)` }}
+                        onMouseDown={handleSwipeStart}
+                        onTouchStart={handleSwipeStart}
+                    >
+                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"></path></svg>
+                    </div>
+                </div>
+            );
+        };
+
+
         const BottomNav = memo(({ activeView, onNavigate }) => {
             const navItems = [
                 { view: 'home', icon: Icons.home, label: 'Träffar' },
@@ -143,6 +229,9 @@
                         <ActionButton type="submit">Logga in</ActionButton>
                     </form>
                     <button onClick={() => onNavigate('signup')} className="text-sm text-[#2E2E2E] mt-4 hover:underline">Inget konto? Skapa ett</button>
+                    <p className="text-xs text-slate-500 mt-8 text-center max-w-xs mx-auto">
+                        Ett tips för en trygg träff: Välj en offentlig plats när ni ses för första gången och använd sunt förnuft. Ha så kul!
+                    </p>
                 </div>
             );
         });
@@ -169,50 +258,77 @@
             );
         });
 
-        const HomeScreen = memo(({ events, onNavigate, currentUser }) => (
-            <div className="flex flex-col h-full bg-white">
-                <header className="p-6 border-b border-slate-200/50 bg-white/80 backdrop-blur-sm sticky top-0 z-10">
-                    <h1 className="text-3xl font-bold text-[#C3B37A]">Träffar</h1>
-                    <p className="text-[#2E2E2E] mt-1">Hej {currentUser.name}, hitta eller skapa något att göra!</p>
-                </header>
-                <main className="flex-grow overflow-y-auto p-6 space-y-4">
-                    {events.sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime)).map(event => {
-                        const isJoined = event.attendeeUserIDs.includes(currentUser.userID);
-                        const isCreator = event.creatorUserID === currentUser.userID;
-                        const borderColor = isCreator ? 'border-[#C3B37A]' : isJoined ? 'border-green-500' : 'border-[#5C524F]';
-                        return (
-                            <div key={event.eventID} onClick={() => onNavigate('details', event.eventID)} className={`p-4 rounded-xl shadow-sm cursor-pointer transition-all bg-white hover:shadow-md relative border-[1mm] ${borderColor}`}>
-                                <div className="flex items-start gap-4">
-                                    <div className="flex-1 min-w-0">
-                                        <p className="font-bold text-[#2E2E2E] truncate">{event.title}</p>
-                                        <p className="text-sm text-[#2E2E2E]">{event.category}</p>
-                                        <div className="text-xs text-[#2E2E2E]/80 mt-2 flex items-center gap-2">
-                                            <Icons.clock className="w-3 h-3" />
-                                            <span className="font-bold">{formatDateTime(event.dateTime)}</span>
+        const HomeScreen = memo(({ events, onNavigate, currentUser }) => {
+            const [activeFilter, setActiveFilter] = useState('Alla');
+            const filters = ['Alla', ...Object.keys(CATEGORY_MAP)];
+
+            const filteredEvents = useMemo(() => {
+                const sortedEvents = [...events].sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime));
+                if (activeFilter === 'Alla') {
+                    return sortedEvents;
+                }
+                const subCategories = CATEGORY_MAP[activeFilter];
+                return sortedEvents.filter(event => subCategories.includes(event.category));
+            }, [events, activeFilter]);
+            
+            return (
+                <div className="flex flex-col h-full bg-white">
+                    <header className="p-6 pb-2 border-b border-slate-200/50 bg-white/80 backdrop-blur-sm sticky top-0 z-10">
+                        <h1 className="text-3xl font-bold text-[#C3B37A]">Träffar</h1>
+                        <p className="text-[#2E2E2E] mt-1">Hej {currentUser.name}, hitta eller skapa något att göra!</p>
+                    </header>
+                    <div className="px-6 py-3 border-b border-slate-200/50 sticky top-[98px] bg-white/80 backdrop-blur-sm z-10">
+                        <div className="flex space-x-2 overflow-x-auto pb-2 no-scrollbar">
+                            {filters.map(filter => (
+                                <button
+                                    key={filter}
+                                    onClick={() => setActiveFilter(prevFilter => prevFilter === filter ? 'Alla' : filter)}
+                                    className={`px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-colors ${activeFilter === filter ? 'bg-[#C3B37A] text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                                >
+                                    {filter}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                    <main className="flex-grow overflow-y-auto p-6 space-y-4">
+                        {filteredEvents.map(event => {
+                            const isJoined = event.attendeeUserIDs.includes(currentUser.userID);
+                            const isCreator = event.creatorUserID === currentUser.userID;
+                            const borderColor = isCreator ? 'border-blue-400' : isJoined ? 'border-green-500' : 'border-[#5C524F]';
+                            return (
+                                <div key={event.eventID} onClick={() => onNavigate('details', event.eventID)} className={`p-4 rounded-xl shadow-sm cursor-pointer transition-all bg-white hover:shadow-md relative border-[1mm] ${borderColor}`}>
+                                    <div className="flex items-start gap-4">
+                                        <div className="flex-1 min-w-0">
+                                            <p className="font-bold text-[#2E2E2E] truncate">{event.title}</p>
+                                            <p className="text-sm text-[#2E2E2E]">{event.category}</p>
+                                            <div className="text-xs text-[#2E2E2E]/80 mt-2 flex items-center gap-2">
+                                                <Icons.clock className="w-3 h-3" />
+                                                <span className="font-bold">{formatDateTime(event.dateTime)}</span>
+                                            </div>
+                                            <div className="text-xs text-[#2E2E2E]/80 mt-1 flex items-center gap-2">
+                                                <Icons.mapPin className="w-3 h-3" />
+                                                <span className="truncate">{event.location}</span>
+                                            </div>
                                         </div>
-                                        <div className="text-xs text-[#2E2E2E]/80 mt-1 flex items-center gap-2">
-                                            <Icons.mapPin className="w-3 h-3" />
-                                            <span className="truncate">{event.location}</span>
+                                        <div className="flex items-center text-sm text-blue-600 font-semibold">
+                                            <Icons.users className="w-4 h-4 mr-1" />
+                                            <span>{event.attendeeUserIDs.length}</span>
                                         </div>
                                     </div>
-                                    <div className="flex items-center text-sm text-blue-600 font-semibold">
-                                        <Icons.users className="w-4 h-4 mr-1" />
-                                        <span>{event.attendeeUserIDs.length}</span>
-                                    </div>
+                                    
                                 </div>
-                                
-                            </div>
-                        )
-                    })}
-                </main>
-            </div>
-        ));
+                            )
+                        })}
+                    </main>
+                </div>
+            );
+        });
         
         const ChatComponent = memo(({ eventId, messages, usersById, currentUser, onSendMessage, hasJoined, isCreator }) => {
             const [newMessage, setNewMessage] = useState('');
             const chatContainerRef = useRef(null);
             
-            const borderColor = isCreator ? 'border-[#C3B37A]' : hasJoined ? 'border-green-500' : 'border-[#5C524F]';
+            const borderColor = isCreator ? 'border-blue-400' : hasJoined ? 'border-green-500' : 'border-[#5C524F]';
 
             useEffect(() => {
                 if (chatContainerRef.current) {
@@ -272,7 +388,7 @@
             const attendees = event.attendeeUserIDs.map(id => usersById[id]);
             const hasJoined = event.attendeeUserIDs.includes(currentUser.userID);
             const isCreator = currentUser.userID === event.creatorUserID;
-            const borderColor = isCreator ? 'border-[#C3B37A]' : hasJoined ? 'border-green-500' : 'border-[#5C524F]';
+            const borderColor = isCreator ? 'border-blue-400' : hasJoined ? 'border-green-500' : 'border-[#5C524F]';
             
             return (
                 <div className="flex flex-col h-full bg-white">
@@ -328,9 +444,7 @@
                                 Gå ut från träff
                             </button>
                         ) : (
-                            <ActionButton onClick={() => onJoin(event.eventID)} className="bg-green-500 hover:bg-green-600 focus:ring-green-500">
-                                Gå med i träff
-                            </ActionButton>
+                             <SwipeButton onSuccess={() => onJoin(event.eventID)} text="Svep för att gå med" />
                         )}
                     </footer>
                 </div>
@@ -572,25 +686,25 @@
                                 <label className="text-sm font-bold text-[#2E2E2E]">Beskrivning</label>
                                 <textarea value={description} onChange={e => setDescription(e.target.value)} required rows="4" className="w-full mt-1 p-2 border border-slate-200/80 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C3B37A] bg-white" maxLength="280"></textarea>
                             </div>
-                            <div className="pt-4"><ActionButton type="submit">Spara ändringar</ActionButton></div>
-                        </form>
-                         <div className="mt-4">
-                            {isConfirmingDelete ? (
-                                <div className="text-center p-4 rounded-lg bg-red-50">
-                                    <p className="font-semibold text-red-700">Är du säker på att du vill ta bort träffen?</p>
-                                    <p className="text-sm text-slate-500">Detta kan inte ångras.</p>
-                                    <div className="mt-4 flex gap-4">
-                                        <button onClick={() => setIsConfirmingDelete(false)} className="flex-1 text-slate-600 font-semibold py-2 px-4 rounded-full bg-slate-200 hover:bg-slate-300 transition-colors">Avbryt</button>
-                                        <button onClick={handleDelete} className="flex-1 text-white font-semibold py-2 px-4 rounded-full bg-red-600 hover:bg-red-700 transition-colors">Ja, ta bort</button>
+                            <div className="pt-4 space-y-2">
+                                <ActionButton type="submit">Spara ändringar</ActionButton>
+                                {isConfirmingDelete ? (
+                                    <div className="text-center p-4 rounded-lg bg-red-50">
+                                        <p className="font-semibold text-red-700">Är du säker på att du vill ta bort träffen?</p>
+                                        <p className="text-sm text-slate-500">Detta kan inte ångras.</p>
+                                        <div className="mt-4 flex gap-4">
+                                            <button onClick={() => setIsConfirmingDelete(false)} className="flex-1 text-slate-600 font-semibold py-2 px-4 rounded-full bg-slate-200 hover:bg-slate-300 transition-colors">Avbryt</button>
+                                            <button onClick={handleDelete} className="flex-1 text-white font-semibold py-2 px-4 rounded-full bg-red-600 hover:bg-red-700 transition-colors">Ja, ta bort</button>
+                                        </div>
                                     </div>
-                                </div>
-                            ) : (
-                                <button onClick={() => setIsConfirmingDelete(true)} className="w-full text-red-600 font-semibold py-3 px-4 rounded-full bg-red-100 hover:bg-red-200 transition-colors flex items-center justify-center gap-2">
-                                    <Icons.trash className="w-5 h-5" />
-                                    <span>Ta bort träff</span>
-                                </button>
-                            )}
-                        </div>
+                                ) : (
+                                    <button onClick={() => setIsConfirmingDelete(true)} className="w-full text-red-600 font-semibold py-3 px-4 rounded-full bg-red-100 hover:bg-red-200 transition-colors flex items-center justify-center gap-2">
+                                        <Icons.trash className="w-5 h-5" />
+                                        <span>Ta bort träff</span>
+                                    </button>
+                                )}
+                            </div>
+                        </form>
                     </main>
                 </div>
             );
@@ -633,7 +747,7 @@
             const EventCard = memo(({event, onNavigate, currentUser}) => {
                 const isJoined = event.attendeeUserIDs.includes(currentUser.userID);
                 const isCreator = event.creatorUserID === currentUser.userID;
-                const borderColor = isCreator ? 'border-[#C3B37A]' : isJoined ? 'border-green-500' : 'border-[#5C524F]';
+                const borderColor = isCreator ? 'border-blue-400' : isJoined ? 'border-green-500' : 'border-[#5C524F]';
                 
                 return (
                      <div onClick={() => onNavigate('details', event.eventID)} className={`p-4 rounded-xl shadow-sm cursor-pointer transition-all bg-white hover:shadow-md relative border-[1mm] ${borderColor}`}>
@@ -749,7 +863,7 @@
                             <div className="space-y-2">
                                 <SettingItem icon={Icons.calendar} label="Min eventhistorik" onClick={() => onNavigate('event-history')} />
                                 <SettingItem icon={Icons.user} label="Redigera profil" onClick={() => {}} />
-                                <SettingItem icon={Icons.settings} label="Notifikationer" onClick={() => {}} />
+                                <SettingItem icon={Icons.settings} label="Inställningar" onClick={() => {}} />
                             </div>
                         </section>
                         
@@ -888,7 +1002,8 @@
                         {joinedEvents.length > 0 ? (
                             joinedEvents.map(event => {
                                 const isCreator = event.creatorUserID === currentUser.userID;
-                                const borderColor = isCreator ? 'border-[#C3B37A]' : 'border-green-500';
+                                const borderColor = isCreator ? 'border-blue-400' : 'border-green-500';
+                                const attendees = event.attendeeUserIDs.map(id => usersById[id]);
                                 return (
                                     <div key={event.eventID} className={`bg-white rounded-lg shadow-sm transition-all border-[1mm] ${borderColor}`}>
                                         <div onClick={() => handleToggleChat(event.eventID)} className="p-4 cursor-pointer hover:bg-slate-100/60 relative">
@@ -910,7 +1025,19 @@
                                                     <span>{event.attendeeUserIDs.length}</span>
                                                 </div>
                                             </div>
-                                            
+                                            <div className="mt-3 pt-3 border-t border-slate-200/60">
+                                                 <h4 className="text-sm font-semibold text-slate-600 mb-2">Deltagare</h4>
+                                                 <div className="flex flex-wrap gap-2">
+                                                    {attendees.map(attendee => attendee && (
+                                                        <div key={attendee.userID} className={`flex items-center gap-2 pr-3 py-1 bg-slate-100 text-[#2E2E2E] rounded-full text-sm`}>
+                                                            <div className="w-6 h-6 rounded-full bg-[#F5F5DC] flex items-center justify-center font-bold text-[#2E2E2E]/70 text-xs">
+                                                                {attendee.name.charAt(0)}
+                                                            </div>
+                                                            {attendee.name}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
                                         </div>
                                         {expandedChatId === event.eventID && (
                                             <div className="p-4 border-t border-slate-200/80">
@@ -1122,5 +1249,9 @@
     </script>
 </body>
 </html>
+
+
+
+
 
 

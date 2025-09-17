@@ -39,6 +39,7 @@
             extend: {
               colors: {
                 'salviagron': '#8aa399',
+                'ecru': '#F5F5DC',
               }
             }
           }
@@ -307,8 +308,8 @@
                             const isCreator = event.creatorUserID === currentUser.userID;
                             return (
                                 <div key={event.eventID} onClick={() => onNavigate('details', event.eventID)} className={`p-4 rounded-xl shadow-lg hover:shadow-xl transition-shadow cursor-pointer bg-white relative`}>
-                                    { (isCreator || isJoined) &&
-                                        <div className={`absolute bottom-3 right-3 h-4 w-4 rounded-full ring-2 ring-white ${isCreator ? 'bg-blue-400' : 'bg-green-500'}`}></div>
+                                    { isJoined &&
+                                        <div className={`absolute bottom-3 right-3 h-4 w-4 rounded-full bg-salviagron ring-2 ${isCreator ? 'ring-ecru' : 'ring-white'}`}></div>
                                     }
                                     <div className="flex items-start gap-4">
                                         <div className="flex-1 min-w-0">
@@ -441,7 +442,12 @@
                             </div>
                         </div>
                         {hasJoined && (
-                            <ActionButton onClick={() => onNavigate('chat-detail', event.eventID)}>Visa chatt</ActionButton>
+                             <button 
+                                onClick={() => onNavigate('chat-detail', event.eventID)} 
+                                className="w-full text-salviagron font-bold py-3 px-4 rounded-full bg-transparent border-2 border-salviagron hover:bg-salviagron/10 transition-colors duration-300"
+                            >
+                                Visa chatt
+                            </button>
                         )}
                     </main>
                     <footer className="p-4 bg-white/80 backdrop-blur-sm border-t border-slate-200/50">
@@ -730,18 +736,19 @@
                 const createdEvents = [];
 
                 events.forEach(event => {
-                    const eventDate = new Date(event.dateTime);
                     const isAttending = event.attendeeUserIDs.includes(currentUser.userID);
+                    if (!isAttending) return; // If not attending, don't show it at all.
+
+                    const eventDate = new Date(event.dateTime);
                     const isCreator = event.creatorUserID === currentUser.userID;
 
-                    if (isCreator) {
-                        createdEvents.push(event);
-                    }
-                    if (isAttending) {
-                        if (eventDate >= now) {
-                           if(!isCreator) upcomingJoined.push(event);
+                    if (eventDate < now) {
+                        pastJoined.push(event);
+                    } else {
+                        if (isCreator) {
+                            createdEvents.push(event);
                         } else {
-                            pastJoined.push(event);
+                            upcomingJoined.push(event);
                         }
                     }
                 });
@@ -761,8 +768,8 @@
                 
                 return (
                      <div onClick={() => onNavigate('details', event.eventID)} className={`p-4 rounded-xl shadow-lg hover:shadow-xl transition-shadow cursor-pointer bg-white relative`}>
-                        { (isCreator || isJoined) &&
-                            <div className={`absolute bottom-3 right-3 h-4 w-4 rounded-full ring-2 ring-white ${isCreator ? 'bg-blue-400' : 'bg-green-500'}`}></div>
+                        { isJoined &&
+                            <div className={`absolute bottom-3 right-3 h-4 w-4 rounded-full bg-salviagron ring-2 ${isCreator ? 'ring-ecru' : 'ring-white'}`}></div>
                         }
                         <div className="flex items-start gap-4">
                             <div className="flex-1 min-w-0">
@@ -1000,11 +1007,14 @@
 
 
             const ChatEventCard = ({ event }) => {
+                const isJoined = event.attendeeUserIDs.includes(currentUser.userID);
                 const isCreator = event.creatorUserID === currentUser.userID;
                 return (
                     <div onClick={() => onNavigate('chat-detail', event.eventID)} className={`bg-white rounded-lg shadow-lg transition-all cursor-pointer hover:bg-slate-50`}>
                         <div className="p-4 relative">
-                            <div className={`absolute bottom-3 right-3 h-4 w-4 rounded-full ring-2 ring-white ${isCreator ? 'bg-blue-400' : 'bg-green-500'}`}></div>
+                            { isJoined &&
+                                <div className={`absolute bottom-3 right-3 h-4 w-4 rounded-full bg-salviagron ring-2 ${isCreator ? 'ring-ecru' : 'ring-white'}`}></div>
+                            }
                             <div className="flex items-start gap-4">
                                 <div className="flex-1 min-w-0">
                                     <p className="font-bold text-[#2E2E2E] truncate">{event.title}</p>
@@ -1334,6 +1344,11 @@
     </script>
 </body>
 </html>
+
+
+
+
+
 
 
 

@@ -6,9 +6,9 @@
     <title>Häng med App</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap');
         body {
-            font-family: 'Nunito Sans', sans-serif;
+            font-family: 'Poppins', sans-serif;
             color: #2E2E2E;
         }
         .animate-fade-in-out {
@@ -33,6 +33,17 @@
             scrollbar-width: none;  /* Firefox */
         }
     </style>
+    <script>
+        tailwind.config = {
+          theme: {
+            extend: {
+              colors: {
+                'salviagron': '#8aa399',
+              }
+            }
+          }
+        }
+    </script>
 </head>
 <body class="bg-white">
     <div id="root"></div>
@@ -108,7 +119,7 @@
             <button
                 type={type}
                 onClick={onClick}
-                className={`w-full text-white font-bold py-3 px-4 rounded-full bg-[#C3B37A] hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#C3B37A] transition-all duration-300 shadow-sm ${className}`}
+                className={`w-full text-white font-bold py-3 px-4 rounded-full bg-salviagron hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-salviagron transition-all duration-300 shadow-sm ${className}`}
             >
                 {children}
             </button>
@@ -199,11 +210,11 @@
                             <button
                                 key={item.view}
                                 onClick={() => onNavigate(item.view)}
-                                className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-colors duration-200 relative ${isActive ? 'text-[#C3B37A]' : 'text-slate-400 hover:text-[#C3B37A]'}`}
+                                className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-colors duration-200 relative ${isActive ? 'text-salviagron' : 'text-slate-400 hover:text-salviagron'}`}
                             >
                                 <item.icon className="w-6 h-6" />
                                 <span className="text-xs font-bold">{item.label}</span>
-                                {isActive && <div className="absolute -bottom-1 h-1 w-1 bg-[#C3B37A] rounded-full"></div>}
+                                {isActive && <div className="absolute -bottom-1 h-1 w-1 bg-salviagron rounded-full"></div>}
                             </button>
                         );
                     })}
@@ -220,10 +231,10 @@
             };
             return (
                 <div className="h-full flex flex-col justify-center items-center p-8 bg-white">
-                    <h1 className="text-5xl font-bold mb-4 text-[#C3B37A]">Häng med</h1>
+                    <h1 className="text-5xl font-bold mb-4 text-salviagron">Häng med</h1>
                     <p className="text-[#2E2E2E] mb-8 text-center">Upptäck och skapa trevliga träffar nära dig.</p>
                     <form onSubmit={handleLogin} className="w-full max-w-xs space-y-4">
-                        <select value={selectedUserId} onChange={(e) => setSelectedUserId(e.target.value)} className="w-full px-4 py-3 border border-slate-200/80 rounded-full focus:outline-none focus:ring-2 focus:ring-[#C3B37A] bg-white">
+                        <select value={selectedUserId} onChange={(e) => setSelectedUserId(e.target.value)} className="w-full px-4 py-3 border border-slate-200/80 rounded-full focus:outline-none focus:ring-2 focus:ring-salviagron bg-white">
                             {users.map(user => <option key={user.userID} value={user.userID}>{user.name}</option>)}
                         </select>
                         <ActionButton type="submit">Logga in</ActionButton>
@@ -245,12 +256,12 @@
             };
             return (
                 <div className="h-full flex flex-col justify-center items-center p-8 bg-white">
-                    <h1 className="text-4xl font-bold mb-4 text-[#C3B37A]">Gå med oss</h1>
+                    <h1 className="text-4xl font-bold mb-4 text-salviagron">Gå med oss</h1>
                     <p className="text-[#2E2E2E] mb-8 text-center">Skapa ditt konto för att börja.</p>
                     <form onSubmit={handleSignUp} className="w-full max-w-xs space-y-4">
-                        <div><input type="text" placeholder="Ditt namn" value={name} onChange={e => setName(e.target.value)} required className="w-full px-4 py-3 border border-slate-200/80 rounded-full focus:outline-none focus:ring-2 focus:ring-[#C3B37A] bg-white" /></div>
-                        <div><input type="email" placeholder="Din e-post" value={email} onChange={e => setEmail(e.target.value)} required className="w-full px-4 py-3 border border-slate-200/80 rounded-full focus:outline-none focus:ring-2 focus:ring-[#C3B37A] bg-white" /></div>
-                        <div><input type="password" placeholder="Lösenord" required className="w-full px-4 py-3 border border-slate-200/80 rounded-full focus:outline-none focus:ring-2 focus:ring-[#C3B37A] bg-white" /></div>
+                        <div><input type="text" placeholder="Ditt namn" value={name} onChange={e => setName(e.target.value)} required className="w-full px-4 py-3 border border-slate-200/80 rounded-full focus:outline-none focus:ring-2 focus:ring-salviagron bg-white" /></div>
+                        <div><input type="email" placeholder="Din e-post" value={email} onChange={e => setEmail(e.target.value)} required className="w-full px-4 py-3 border border-slate-200/80 rounded-full focus:outline-none focus:ring-2 focus:ring-salviagron bg-white" /></div>
+                        <div><input type="password" placeholder="Lösenord" required className="w-full px-4 py-3 border border-slate-200/80 rounded-full focus:outline-none focus:ring-2 focus:ring-salviagron bg-white" /></div>
                         <ActionButton type="submit">Skapa konto</ActionButton>
                     </form>
                     <button onClick={() => onNavigate('login')} className="text-sm text-[#2E2E2E] mt-4 hover:underline">Har du redan ett konto? Logga in</button>
@@ -274,7 +285,7 @@
             return (
                 <div className="flex flex-col h-full bg-white">
                     <header className="p-6 pb-2 border-b border-slate-200/50 bg-white/80 backdrop-blur-sm sticky top-0 z-10">
-                        <h1 className="text-3xl font-bold text-[#C3B37A]">Träffar</h1>
+                        <h1 className="text-3xl font-bold text-salviagron">Träffar</h1>
                         <p className="text-[#2E2E2E] mt-1">Hej {currentUser.name}, hitta eller skapa något att göra!</p>
                     </header>
                     <div className="px-6 py-3 border-b border-slate-200/50 sticky top-[98px] bg-white/80 backdrop-blur-sm z-10">
@@ -283,7 +294,7 @@
                                 <button
                                     key={filter}
                                     onClick={() => setActiveFilter(prevFilter => prevFilter === filter ? 'Alla' : filter)}
-                                    className={`px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-colors ${activeFilter === filter ? 'bg-[#C3B37A] text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                                    className={`px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-colors ${activeFilter === filter ? 'bg-salviagron text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
                                 >
                                     {filter}
                                 </button>
@@ -294,9 +305,11 @@
                         {filteredEvents.map(event => {
                             const isJoined = event.attendeeUserIDs.includes(currentUser.userID);
                             const isCreator = event.creatorUserID === currentUser.userID;
-                            const borderColor = isCreator ? 'border-blue-400' : isJoined ? 'border-green-500' : 'border-[#5C524F]';
                             return (
-                                <div key={event.eventID} onClick={() => onNavigate('details', event.eventID)} className={`p-4 rounded-xl shadow-sm cursor-pointer transition-all bg-white hover:shadow-md relative border-[1mm] ${borderColor}`}>
+                                <div key={event.eventID} onClick={() => onNavigate('details', event.eventID)} className={`p-4 rounded-xl shadow-lg hover:shadow-xl transition-shadow cursor-pointer bg-white relative`}>
+                                    { (isCreator || isJoined) &&
+                                        <div className={`absolute bottom-3 right-3 h-4 w-4 rounded-full ring-2 ring-white ${isCreator ? 'bg-blue-400' : 'bg-green-500'}`}></div>
+                                    }
                                     <div className="flex items-start gap-4">
                                         <div className="flex-1 min-w-0">
                                             <p className="font-bold text-[#2E2E2E] truncate">{event.title}</p>
@@ -350,14 +363,22 @@
                             const sender = usersById[message.userID];
                             const isCurrentUser = sender.userID === currentUser.userID;
                             return (
-                                <div key={message.messageID} className={`flex items-end gap-2 ${isCurrentUser ? 'justify-end' : ''}`}>
+                                <div key={message.messageID} className={`flex items-start gap-2 ${isCurrentUser ? 'justify-end' : 'justify-start'}`}>
+                                    {/* Avatar for other users */}
                                     {!isCurrentUser && (
                                         <div className="w-8 h-8 rounded-full bg-[#F5F5DC] flex items-center justify-center font-bold text-[#2E2E2E]/70 text-sm flex-shrink-0">
                                             {sender.name.charAt(0)}
                                         </div>
                                     )}
-                                    <div className={`max-w-xs p-3 rounded-2xl ${isCurrentUser ? 'bg-[#C3B37A] text-white rounded-br-none' : 'bg-green-100 text-green-900 rounded-bl-none'}`}>
-                                        <p className="text-sm">{message.text}</p>
+
+                                    {/* Message bubble with optional name */}
+                                    <div className={`flex flex-col ${isCurrentUser ? 'items-end' : 'items-start'}`}>
+                                        {!isCurrentUser && (
+                                            <span className="text-xs text-slate-500 mb-0.5 ml-3">{sender.name}</span>
+                                        )}
+                                        <div className={`max-w-xs p-3 rounded-2xl ${isCurrentUser ? 'bg-salviagron text-white rounded-br-none' : 'bg-slate-100 text-slate-800 rounded-bl-none'}`}>
+                                            <p className="text-sm break-words">{message.text}</p>
+                                        </div>
                                     </div>
                                 </div>
                             );
@@ -370,9 +391,9 @@
                             value={newMessage}
                             onChange={(e) => setNewMessage(e.target.value)}
                             placeholder="Skriv ett meddelande..."
-                            className="w-full p-2 border border-slate-200/80 rounded-full focus:outline-none focus:ring-2 focus:ring-[#C3B37A] bg-white"
+                            className="w-full p-2 border border-slate-200/80 rounded-full focus:outline-none focus:ring-2 focus:ring-salviagron bg-white"
                         />
-                        <button type="submit" className="p-2.5 rounded-full bg-[#C3B37A] text-white hover:opacity-90 transition-opacity">
+                        <button type="submit" className="p-2.5 rounded-full bg-salviagron text-white hover:opacity-90 transition-opacity">
                             <Icons.send className="w-5 h-5" />
                         </button>
                     </form>
@@ -414,7 +435,7 @@
                                 <h3 className="font-semibold mb-2 text-[#2E2E2E]">Vem kommer? ({attendees.length})</h3>
                                 <div className="flex flex-wrap gap-2">
                                     {attendees.map(attendee => attendee && (
-                                        <div key={attendee.userID} className={`flex items-center gap-2 pr-3 py-1 bg-slate-100 text-[#2E2E2E] rounded-full text-sm ${attendee.userID === currentUser.userID ? 'ring-2 ring-[#C3B37A]' : ''}`}>
+                                        <div key={attendee.userID} className={`flex items-center gap-2 pr-3 py-1 bg-slate-100 text-[#2E2E2E] rounded-full text-sm ${attendee.userID === currentUser.userID ? 'ring-2 ring-salviagron' : ''}`}>
                                             <div className="w-6 h-6 rounded-full bg-[#F5F5DC] flex items-center justify-center font-bold text-[#2E2E2E]/70 text-xs">
                                                 {attendee.name.charAt(0)}
                                             </div>
@@ -504,18 +525,18 @@
                         <button onClick={() => onNavigate('home')} className="p-2 rounded-full hover:bg-slate-100/60">
                              <Icons.arrowLeft className="w-6 h-6 text-[#2E2E2E]" />
                         </button>
-                        <h1 className="text-xl font-semibold text-[#C3B37A]">Skapa ny träff</h1>
+                        <h1 className="text-xl font-semibold text-salviagron">Skapa ny träff</h1>
                         <div className="w-10"></div>
                     </header>
                     <main className="flex-grow overflow-y-auto p-6">
                         <form onSubmit={handleSubmit} className="space-y-4">
                             <div>
                                 <label className="text-sm font-bold text-[#2E2E2E]">Titel</label>
-                                <input type="text" value={title} onChange={e => setTitle(e.target.value)} required className="w-full mt-1 p-2 border border-slate-200/80 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C3B37A] bg-white" maxLength="29" />
+                                <input type="text" value={title} onChange={e => setTitle(e.target.value)} required className="w-full mt-1 p-2 border border-slate-200/80 rounded-lg focus:outline-none focus:ring-2 focus:ring-salviagron bg-white" maxLength="29" />
                             </div>
                             <div>
                                 <label className="text-sm font-bold text-[#2E2E2E]">Kategori</label>
-                                <select value={category} onChange={e => setCategory(e.target.value)} className="w-full mt-1 p-2 border border-slate-200/80 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C3B37A] bg-white">
+                                <select value={category} onChange={e => setCategory(e.target.value)} className="w-full mt-1 p-2 border border-slate-200/80 rounded-lg focus:outline-none focus:ring-2 focus:ring-salviagron bg-white">
                                     <optgroup label="☕ Mat & Dryck">
                                         <option>Fika</option>
                                         <option>Äta ute</option>
@@ -542,20 +563,20 @@
                             </div>
                             <div>
                                 <label className="text-sm font-bold text-[#2E2E2E]">Plats</label>
-                                <input type="text" value={location} onChange={(e) => setLocation(e.target.value)} required className="w-full mt-1 p-2 border border-slate-200/80 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C3B37A] bg-white" maxLength="70" />
+                                <input type="text" value={location} onChange={(e) => setLocation(e.target.value)} required className="w-full mt-1 p-2 border border-slate-200/80 rounded-lg focus:outline-none focus:ring-2 focus:ring-salviagron bg-white" maxLength="70" />
                             </div>
                             <div className="flex gap-4">
                                 <div className="flex-1">
                                     <label className="text-sm font-bold text-[#2E2E2E]">Datum</label>
                                     <div className="relative mt-1">
-                                        <input type="date" value={date} min={today} onChange={e => setDate(e.target.value)} required className="w-full p-2 pr-10 border border-slate-200/80 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C3B37A] bg-white" />
+                                        <input type="date" value={date} min={today} onChange={e => setDate(e.target.value)} required className="w-full p-2 pr-10 border border-slate-200/80 rounded-lg focus:outline-none focus:ring-2 focus:ring-salviagron bg-white" />
                                         <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none"><Icons.calendar className="w-5 h-5 text-slate-400" /></div>
                                     </div>
                                 </div>
                                 <div className="flex-1">
                                     <label className="text-sm font-bold text-[#2E2E2E]">Tid</label>
                                      <div className="relative mt-1">
-                                        <input type="time" step="900" value={time} onChange={e => setTime(e.target.value)} required className="w-full p-2 pr-10 border border-slate-200/80 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C3B37A] bg-white" />
+                                        <input type="time" step="900" value={time} onChange={e => setTime(e.target.value)} required className="w-full p-2 pr-10 border border-slate-200/80 rounded-lg focus:outline-none focus:ring-2 focus:ring-salviagron bg-white" />
                                          <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none"><Icons.clock className="w-5 h-5 text-slate-400" /></div>
                                     </div>
                                 </div>
@@ -563,9 +584,9 @@
                             <div>
                                 <div className="flex justify-between items-center">
                                     <label className="text-sm font-bold text-[#2E2E2E]">Beskrivning</label>
-                                    <button type="button" onClick={generateAIDescription} disabled={isGenerating} className="text-sm text-[#C3B37A] hover:underline font-semibold disabled:opacity-50">{isGenerating ? 'Genererar...' : 'Generera med AI'}</button>
+                                    <button type="button" onClick={generateAIDescription} disabled={isGenerating} className="text-sm text-salviagron hover:underline font-semibold disabled:opacity-50">{isGenerating ? 'Genererar...' : 'Generera med AI'}</button>
                                 </div>
-                                <textarea value={description} onChange={e => setDescription(e.target.value)} required rows="4" className="w-full mt-1 p-2 border border-slate-200/80 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C3B37A] bg-white" maxLength="280"></textarea>
+                                <textarea value={description} onChange={e => setDescription(e.target.value)} required rows="4" className="w-full mt-1 p-2 border border-slate-200/80 rounded-lg focus:outline-none focus:ring-2 focus:ring-salviagron bg-white" maxLength="280"></textarea>
                             </div>
                             <div className="pt-2"><ActionButton type="submit">Skapa träff</ActionButton></div>
                         </form>
@@ -626,18 +647,18 @@
                         <button onClick={() => onNavigate('details', eventId)} className="p-2 rounded-full hover:bg-slate-100/60">
                              <Icons.arrowLeft className="w-6 h-6 text-[#2E2E2E]" />
                         </button>
-                        <h1 className="text-xl font-semibold text-[#C3B37A]">Redigera träff</h1>
+                        <h1 className="text-xl font-semibold text-salviagron">Redigera träff</h1>
                         <div className="w-10"></div>
                     </header>
                     <main className="flex-grow overflow-y-auto p-6">
                         <form onSubmit={handleSubmit} className="space-y-4">
                             <div>
                                 <label className="text-sm font-bold text-[#2E2E2E]">Titel</label>
-                                <input type="text" value={title} onChange={e => setTitle(e.target.value)} required className="w-full mt-1 p-2 border border-slate-200/80 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C3B37A] bg-white" maxLength="29" />
+                                <input type="text" value={title} onChange={e => setTitle(e.target.value)} required className="w-full mt-1 p-2 border border-slate-200/80 rounded-lg focus:outline-none focus:ring-2 focus:ring-salviagron bg-white" maxLength="29" />
                             </div>
                             <div>
                                 <label className="text-sm font-bold text-[#2E2E2E]">Kategori</label>
-                                <select value={category} onChange={e => setCategory(e.target.value)} className="w-full mt-1 p-2 border border-slate-200/80 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C3B37A] bg-white">
+                                <select value={category} onChange={e => setCategory(e.target.value)} className="w-full mt-1 p-2 border border-slate-200/80 rounded-lg focus:outline-none focus:ring-2 focus:ring-salviagron bg-white">
                                     <optgroup label="☕ Mat & Dryck">
                                         <option>Fika</option>
                                         <option>Äta ute</option>
@@ -664,27 +685,27 @@
                             </div>
                             <div>
                                 <label className="text-sm font-bold text-[#2E2E2E]">Plats</label>
-                                <input type="text" value={location} onChange={(e) => setLocation(e.target.value)} required className="w-full mt-1 p-2 border border-slate-200/80 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C3B37A] bg-white" maxLength="70" />
+                                <input type="text" value={location} onChange={(e) => setLocation(e.target.value)} required className="w-full mt-1 p-2 border border-slate-200/80 rounded-lg focus:outline-none focus:ring-2 focus:ring-salviagron bg-white" maxLength="70" />
                             </div>
                             <div className="flex gap-4">
                                 <div className="flex-1">
                                     <label className="text-sm font-bold text-[#2E2E2E]">Datum</label>
                                     <div className="relative mt-1">
-                                        <input type="date" value={date} min={new Date().toISOString().split('T')[0]} onChange={e => setDate(e.target.value)} required className="w-full p-2 pr-10 border border-slate-200/80 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C3B37A] bg-white" />
+                                        <input type="date" value={date} min={new Date().toISOString().split('T')[0]} onChange={e => setDate(e.target.value)} required className="w-full p-2 pr-10 border border-slate-200/80 rounded-lg focus:outline-none focus:ring-2 focus:ring-salviagron bg-white" />
                                         <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none"><Icons.calendar className="w-5 h-5 text-slate-400" /></div>
                                     </div>
                                 </div>
                                 <div className="flex-1">
                                     <label className="text-sm font-bold text-[#2E2E2E]">Tid</label>
                                      <div className="relative mt-1">
-                                        <input type="time" step="900" value={time} onChange={e => setTime(e.target.value)} required className="w-full p-2 pr-10 border border-slate-200/80 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C3B37A] bg-white" />
+                                        <input type="time" step="900" value={time} onChange={e => setTime(e.target.value)} required className="w-full p-2 pr-10 border border-slate-200/80 rounded-lg focus:outline-none focus:ring-2 focus:ring-salviagron bg-white" />
                                          <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none"><Icons.clock className="w-5 h-5 text-slate-400" /></div>
                                     </div>
                                 </div>
                             </div>
                             <div>
                                 <label className="text-sm font-bold text-[#2E2E2E]">Beskrivning</label>
-                                <textarea value={description} onChange={e => setDescription(e.target.value)} required rows="4" className="w-full mt-1 p-2 border border-slate-200/80 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C3B37A] bg-white" maxLength="280"></textarea>
+                                <textarea value={description} onChange={e => setDescription(e.target.value)} required rows="4" className="w-full mt-1 p-2 border border-slate-200/80 rounded-lg focus:outline-none focus:ring-2 focus:ring-salviagron bg-white" maxLength="280"></textarea>
                             </div>
                             <div className="pt-4 space-y-2">
                                 <ActionButton type="submit">Spara ändringar</ActionButton>
@@ -747,10 +768,12 @@
             const EventCard = memo(({event, onNavigate, currentUser}) => {
                 const isJoined = event.attendeeUserIDs.includes(currentUser.userID);
                 const isCreator = event.creatorUserID === currentUser.userID;
-                const borderColor = isCreator ? 'border-blue-400' : isJoined ? 'border-green-500' : 'border-[#5C524F]';
                 
                 return (
-                     <div onClick={() => onNavigate('details', event.eventID)} className={`p-4 rounded-xl shadow-sm cursor-pointer transition-all bg-white hover:shadow-md relative border-[1mm] ${borderColor}`}>
+                     <div onClick={() => onNavigate('details', event.eventID)} className={`p-4 rounded-xl shadow-lg hover:shadow-xl transition-shadow cursor-pointer bg-white relative`}>
+                        { (isCreator || isJoined) &&
+                            <div className={`absolute bottom-3 right-3 h-4 w-4 rounded-full ring-2 ring-white ${isCreator ? 'bg-blue-400' : 'bg-green-500'}`}></div>
+                        }
                         <div className="flex items-start gap-4">
                             <div className="flex-1 min-w-0">
                                 <p className="font-bold text-[#2E2E2E] truncate">{event.title}</p>
@@ -784,7 +807,7 @@
             
             return (
                 <div className="flex flex-col h-full bg-white">
-                    <header className="p-6 border-b border-slate-200/50 bg-white/80 backdrop-blur-sm sticky top-0 z-10"><h1 className="text-3xl font-bold text-[#C3B37A]">Mina träffar</h1></header>
+                    <header className="p-6 border-b border-slate-200/50 bg-white/80 backdrop-blur-sm sticky top-0 z-10"><h1 className="text-3xl font-bold text-salviagron">Mina träffar</h1></header>
                     <main className="flex-grow overflow-y-auto p-6 space-y-8">
                          <div>
                             <h2 className="text-lg font-bold text-[#2E2E2E] mb-3">På gång för mig ({categorizedEvents.upcomingJoined.length})</h2>
@@ -828,7 +851,7 @@
             const SettingItem = ({ icon, label, onClick }) => (
                  <button onClick={onClick} className="w-full flex items-center justify-between text-left p-4 bg-white rounded-lg hover:bg-slate-100/60 transition-colors border border-slate-200/60">
                     <div className="flex items-center gap-4">
-                        {React.createElement(icon, { className: "w-6 h-6 text-[#C3B37A]" })}
+                        {React.createElement(icon, { className: "w-6 h-6 text-salviagron" })}
                         <span className="font-semibold text-[#2E2E2E]">{label}</span>
                     </div>
                     <Icons.chevronRight className="w-5 h-5 text-slate-400" />
@@ -838,7 +861,7 @@
             return (
                 <div className="flex flex-col h-full bg-slate-50">
                     <header className="p-6 bg-white border-b border-slate-200/50">
-                        <h1 className="text-3xl font-bold text-[#C3B37A]">Profil</h1>
+                        <h1 className="text-3xl font-bold text-salviagron">Profil</h1>
                     </header>
                     <main className="flex-grow overflow-y-auto p-6 space-y-8">
                         <section className="flex flex-col items-center text-center space-y-2">
@@ -849,11 +872,11 @@
 
                         <section className="grid grid-cols-2 gap-4 text-center">
                             <div className="bg-white p-4 rounded-lg border border-slate-200/60">
-                                <p className="text-2xl font-bold text-[#C3B37A]">{stats.createdCount}</p>
+                                <p className="text-2xl font-bold text-salviagron">{stats.createdCount}</p>
                                 <p className="text-sm text-[#2E2E2E]/80">skapade</p>
                             </div>
                             <div className="bg-white p-4 rounded-lg border border-slate-200/60">
-                                <p className="text-2xl font-bold text-[#C3B37A]">{stats.attendedCount}</p>
+                                <p className="text-2xl font-bold text-salviagron">{stats.attendedCount}</p>
                                 <p className="text-sm text-[#2E2E2E]/80">deltagna</p>
                             </div>
                         </section>
@@ -919,7 +942,7 @@
             const StatCard = ({ label, value }) => (
                 <div className="bg-white p-4 rounded-lg border border-slate-200/60 text-center">
                     <p className="text-sm text-[#2E2E2E]/80">{label}</p>
-                    <p className="text-xl font-bold text-[#C3B37A]">{value}</p>
+                    <p className="text-xl font-bold text-salviagron">{value}</p>
                 </div>
             );
 
@@ -929,7 +952,7 @@
                         <button onClick={() => onNavigate('profile')} className="p-2 rounded-full hover:bg-slate-100/60">
                             <Icons.arrowLeft className="w-6 h-6 text-[#2E2E2E]" />
                         </button>
-                        <h1 className="text-xl font-semibold text-[#C3B37A]">Min Eventhistorik</h1>
+                        <h1 className="text-xl font-semibold text-salviagron">Min Eventhistorik</h1>
                     </header>
                     <main className="flex-grow overflow-y-auto p-6 space-y-8">
                         <section>
@@ -975,81 +998,108 @@
 
         const ChatListScreen = memo(({ events, currentUser, onNavigate, chatMessages, onSendMessage, usersById }) => {
             const [expandedChatId, setExpandedChatId] = useState(null);
-            const joinedEvents = useMemo(() => events
-                .filter(e => e.attendeeUserIDs.includes(currentUser.userID))
-                .sort((a,b) => new Date(b.dateTime) - new Date(a.dateTime)), [events, currentUser.userID]);
+            
+            const { createdChats, attendingChats } = useMemo(() => {
+                const joinedEvents = events
+                    .filter(e => e.attendeeUserIDs.includes(currentUser.userID))
+                    .sort((a,b) => new Date(b.dateTime) - new Date(a.dateTime));
+                
+                const created = joinedEvents.filter(e => e.creatorUserID === currentUser.userID);
+                const attending = joinedEvents.filter(e => e.creatorUserID !== currentUser.userID);
+                
+                return { createdChats: created, attendingChats: attending };
+            }, [events, currentUser.userID]);
 
             const handleToggleChat = (eventId) => {
                 setExpandedChatId(prevId => prevId === eventId ? null : eventId);
             };
 
-            const EmptyState = () => (
-                <div className="text-center py-12">
-                    <div className="w-16 h-16 mx-auto bg-slate-100 rounded-full flex items-center justify-center">
-                        <Icons.messageCircle className="w-8 h-8 text-slate-400" />
+            const ChatEventCard = ({ event }) => {
+                const isCreator = event.creatorUserID === currentUser.userID;
+                const attendees = event.attendeeUserIDs.map(id => usersById[id]);
+
+                return (
+                    <div className={`bg-white rounded-lg shadow-lg transition-all`}>
+                        <div onClick={() => handleToggleChat(event.eventID)} className="p-4 cursor-pointer hover:bg-slate-100/60 relative">
+                            <div className={`absolute bottom-3 right-3 h-4 w-4 rounded-full ring-2 ring-white ${isCreator ? 'bg-blue-400' : 'bg-green-500'}`}></div>
+                            <div className="flex items-start gap-4">
+                                <div className="flex-1 min-w-0">
+                                    <p className="font-bold text-[#2E2E2E] truncate">{event.title}</p>
+                                    <p className="text-sm text-[#2E2E2E]">{event.category}</p>
+                                    <div className="text-xs text-[#2E2E2E]/80 mt-2 flex items-center gap-2">
+                                        <Icons.clock className="w-3 h-3" />
+                                        <span className="font-bold">{formatDateTime(event.dateTime)}</span>
+                                    </div>
+                                    <div className="text-xs text-[#2E2E2E]/80 mt-1 flex items-center gap-2">
+                                        <Icons.mapPin className="w-3 h-3" />
+                                        <span className="truncate">{event.location}</span>
+                                    </div>
+                                </div>
+                                <div className="flex items-center text-sm text-blue-600 font-semibold">
+                                    <Icons.users className="w-4 h-4 mr-1" />
+                                    <span>{event.attendeeUserIDs.length}</span>
+                                </div>
+                            </div>
+                            <div className="mt-3 pt-3 border-t border-slate-200/60">
+                                 <h4 className="text-sm font-semibold text-slate-600 mb-2">Deltagare</h4>
+                                 <div className="flex flex-wrap gap-2">
+                                    {attendees.map(attendee => attendee && (
+                                        <div key={attendee.userID} className={`flex items-center gap-2 pr-3 py-1 bg-slate-100 text-[#2E2E2E] rounded-full text-sm`}>
+                                            <div className="w-6 h-6 rounded-full bg-[#F5F5DC] flex items-center justify-center font-bold text-[#2E2E2E]/70 text-xs">
+                                                {attendee.name.charAt(0)}
+                                            </div>
+                                            {attendee.name}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                        {expandedChatId === event.eventID && (
+                            <div className="p-4 border-t border-slate-200/80">
+                                 <ChatComponent eventId={event.eventID} messages={chatMessages[event.eventID] || []} usersById={usersById} currentUser={currentUser} onSendMessage={onSendMessage} hasJoined={true} isCreator={isCreator} />
+                            </div>
+                        )}
                     </div>
-                    <h3 className="mt-4 text-lg font-semibold text-[#2E2E2E]">Inga chattar än</h3>
-                    <p className="mt-1 text-sm text-[#2E2E2E]/70">Gå med i en träff för att börja chatta.</p>
+                );
+            };
+
+            const EmptyState = ({title, text}) => (
+                <div className="text-center py-8">
+                    <p className="text-slate-500 font-semibold">{title}</p>
+                    <p className="text-sm text-slate-400 mt-1">{text}</p>
                 </div>
             );
 
             return (
                 <div className="flex flex-col h-full bg-white">
                     <header className="p-6 border-b border-slate-200/50 bg-white/80 backdrop-blur-sm sticky top-0 z-10">
-                        <h1 className="text-3xl font-bold text-[#C3B37A]">Chattar</h1>
+                        <h1 className="text-3xl font-bold text-salviagron">Chattar</h1>
                     </header>
-                    <main className="flex-grow overflow-y-auto p-6 space-y-4">
-                        {joinedEvents.length > 0 ? (
-                            joinedEvents.map(event => {
-                                const isCreator = event.creatorUserID === currentUser.userID;
-                                const borderColor = isCreator ? 'border-blue-400' : 'border-green-500';
-                                const attendees = event.attendeeUserIDs.map(id => usersById[id]);
-                                return (
-                                    <div key={event.eventID} className={`bg-white rounded-lg shadow-sm transition-all border-[1mm] ${borderColor}`}>
-                                        <div onClick={() => handleToggleChat(event.eventID)} className="p-4 cursor-pointer hover:bg-slate-100/60 relative">
-                                            <div className="flex items-start gap-4">
-                                                <div className="flex-1 min-w-0">
-                                                    <p className="font-bold text-[#2E2E2E] truncate">{event.title}</p>
-                                                    <p className="text-sm text-[#2E2E2E]">{event.category}</p>
-                                                    <div className="text-xs text-[#2E2E2E]/80 mt-2 flex items-center gap-2">
-                                                        <Icons.clock className="w-3 h-3" />
-                                                        <span className="font-bold">{formatDateTime(event.dateTime)}</span>
-                                                    </div>
-                                                    <div className="text-xs text-[#2E2E2E]/80 mt-1 flex items-center gap-2">
-                                                        <Icons.mapPin className="w-3 h-3" />
-                                                        <span className="truncate">{event.location}</span>
-                                                    </div>
-                                                </div>
-                                                <div className="flex items-center text-sm text-blue-600 font-semibold">
-                                                    <Icons.users className="w-4 h-4 mr-1" />
-                                                    <span>{event.attendeeUserIDs.length}</span>
-                                                </div>
-                                            </div>
-                                            <div className="mt-3 pt-3 border-t border-slate-200/60">
-                                                 <h4 className="text-sm font-semibold text-slate-600 mb-2">Deltagare</h4>
-                                                 <div className="flex flex-wrap gap-2">
-                                                    {attendees.map(attendee => attendee && (
-                                                        <div key={attendee.userID} className={`flex items-center gap-2 pr-3 py-1 bg-slate-100 text-[#2E2E2E] rounded-full text-sm`}>
-                                                            <div className="w-6 h-6 rounded-full bg-[#F5F5DC] flex items-center justify-center font-bold text-[#2E2E2E]/70 text-xs">
-                                                                {attendee.name.charAt(0)}
-                                                            </div>
-                                                            {attendee.name}
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        </div>
-                                        {expandedChatId === event.eventID && (
-                                            <div className="p-4 border-t border-slate-200/80">
-                                                 <ChatComponent eventId={event.eventID} messages={chatMessages[event.eventID] || []} usersById={usersById} currentUser={currentUser} onSendMessage={onSendMessage} hasJoined={true} isCreator={isCreator} />
-                                            </div>
-                                        )}
-                                    </div>
-                                );
-                            })
-                        ) : (
-                            <EmptyState />
-                        )}
+                    <main className="flex-grow overflow-y-auto p-6 space-y-8">
+                        <div>
+                            <h2 className="text-lg font-bold text-[#2E2E2E] mb-3">På gång för mig ({attendingChats.length})</h2>
+                            {attendingChats.length > 0 ? (
+                                <div className="space-y-4">
+                                    {attendingChats.map(event => (
+                                        <ChatEventCard key={event.eventID} event={event} />
+                                    ))}
+                                </div>
+                            ) : (
+                                <EmptyState title="Inga kommande chattar" text="Gå med i en träff för att se chatten här."/>
+                            )}
+                        </div>
+                        <div>
+                            <h2 className="text-lg font-bold text-[#2E2E2E] mb-3">Mina skapade träffar ({createdChats.length})</h2>
+                            {createdChats.length > 0 ? (
+                                <div className="space-y-4">
+                                    {createdChats.map(event => (
+                                        <ChatEventCard key={event.eventID} event={event} />
+                                    ))}
+                                </div>
+                            ) : (
+                                 <EmptyState title="Inga skapade chattar" text="Skapa en träff för att starta en chatt." />
+                            )}
+                        </div>
                     </main>
                 </div>
             );
@@ -1225,7 +1275,7 @@
                         {['home', 'my-events'].includes(view.name) && (
                                 <button 
                                  onClick={() => handleNavigate('create')} 
-                                 className="absolute bottom-24 right-6 w-14 h-14 rounded-full bg-[#C3B37A] text-white shadow-lg flex items-center justify-center hover:opacity-90 transition-opacity"
+                                 className="absolute bottom-24 right-6 w-14 h-14 rounded-full bg-salviagron text-white shadow-lg flex items-center justify-center hover:opacity-90 transition-opacity"
                             >
                                 <Icons.plus className="w-8 h-8" />
                             </button>
@@ -1249,9 +1299,4 @@
     </script>
 </body>
 </html>
-
-
-
-
-
 

@@ -126,76 +126,6 @@
             </button>
         ));
 
-        const SwipeButton = ({ onSuccess, text }) => {
-            const [thumbPosition, setThumbPosition] = useState(0);
-            const [isSwiping, setIsSwiping] = useState(false);
-            const [isCompleted, setIsCompleted] = useState(false);
-            const trackRef = useRef(null);
-            const thumbRef = useRef(null);
-            
-            const handleSwipeStart = (e) => {
-                if (isCompleted) return;
-                setIsSwiping(true);
-                thumbRef.current.style.transition = 'none';
-                document.addEventListener('mousemove', handleSwipeMove);
-                document.addEventListener('touchmove', handleSwipeMove, { passive: false });
-                document.addEventListener('mouseup', handleSwipeEnd);
-                document.addEventListener('touchend', handleSwipeEnd);
-            };
-
-            const handleSwipeMove = (e) => {
-                e.preventDefault();
-                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-                const trackRect = trackRef.current.getBoundingClientRect();
-                const thumbWidth = thumbRef.current.offsetWidth;
-                let newX = clientX - trackRect.left - (thumbWidth / 2);
-                const maxPosition = trackRect.width - thumbWidth;
-                newX = Math.max(0, Math.min(newX, maxPosition));
-                setThumbPosition(newX);
-            };
-
-            const handleSwipeEnd = () => {
-                document.removeEventListener('mousemove', handleSwipeMove);
-                document.removeEventListener('touchmove', handleSwipeMove);
-                document.removeEventListener('mouseup', handleSwipeEnd);
-                document.removeEventListener('touchend', handleSwipeEnd);
-
-                if (!isSwiping) return;
-
-                setIsSwiping(false);
-                thumbRef.current.style.transition = 'transform 0.3s ease-out';
-                const trackWidth = trackRef.current.offsetWidth;
-                const thumbWidth = thumbRef.current.offsetWidth;
-                const successThreshold = trackWidth - thumbWidth - 5;
-
-                if (thumbPosition >= successThreshold) {
-                    setThumbPosition(trackWidth - thumbWidth);
-                    setIsCompleted(true);
-                    onSuccess();
-                } else {
-                    setThumbPosition(0);
-                }
-            };
-
-            return (
-                <div ref={trackRef} className="w-full h-[52px] bg-green-200 rounded-full relative flex items-center justify-center overflow-hidden select-none cursor-grab active:cursor-grabbing">
-                    <span className={`z-10 text-green-800 font-bold transition-opacity duration-300 ${isSwiping || isCompleted ? 'opacity-0' : 'opacity-100'}`}>
-                        {text}
-                    </span>
-                    <div 
-                        ref={thumbRef}
-                        className="w-[52px] h-[52px] bg-green-500 rounded-full absolute top-0 left-0 flex items-center justify-center shadow-md border-4 border-green-200"
-                        style={{ transform: `translateX(${thumbPosition}px)` }}
-                        onMouseDown={handleSwipeStart}
-                        onTouchStart={handleSwipeStart}
-                    >
-                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"></path></svg>
-                    </div>
-                </div>
-            );
-        };
-
-
         const BottomNav = memo(({ activeView, onNavigate }) => {
             const navItems = [
                 { view: 'home', icon: Icons.home, label: 'Träffar' },
@@ -461,7 +391,9 @@
                                 Gå ut från träff
                             </button>
                         ) : (
-                             <SwipeButton onSuccess={() => onJoin(event.eventID)} text="Svep för att gå med" />
+                             <ActionButton onClick={() => onJoin(event.eventID)} className="bg-green-500 hover:bg-green-600 focus:ring-green-500">
+                                Gå med i träff
+                            </ActionButton>
                         )}
                     </footer>
                 </div>
@@ -1344,6 +1276,8 @@
     </script>
 </body>
 </html>
+
+
 
 
 

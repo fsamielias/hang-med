@@ -311,13 +311,6 @@
                 }
             };
 
-            const handleKeyDown = (e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    formRef.current.requestSubmit();
-                }
-            };
-
             return (
                 <div className="flex-grow flex flex-col overflow-hidden">
                     <div ref={chatContainerRef} className="flex-1 overflow-y-auto space-y-3 p-2">
@@ -350,7 +343,6 @@
                             ref={inputRef}
                             value={newMessage}
                             onChange={(e) => setNewMessage(e.target.value)}
-                            onKeyDown={handleKeyDown}
                             placeholder="Skriv ett meddelande..."
                             className="w-full p-3 pr-14 border border-slate-200/80 rounded-xl focus:outline-none focus:ring-2 focus:ring-salviagron bg-white resize-none"
                             rows="2"
@@ -881,7 +873,7 @@
                                 <div className="space-y-4">{categorizedEvents.createdEvents.map(event => (<EventCard key={event.eventID} event={event} onNavigate={onNavigate} currentUser={currentUser} />))}</div>
                             ) : (<EmptyState icon={Icons.plus} title="Du har inte skapat något" text="Klicka på plus-knappen för att skapa din första träff." />)}
                         </div>
-                         {categorizedEvents.pastJoined.length > 0 && (
+                        {categorizedEvents.pastJoined.length > 0 && (
                             <div>
                                 <h2 className="text-xl font-bold text-[#2E2E2E] text-center mb-3 underline">Tidigare träffar ({categorizedEvents.pastJoined.length})</h2>
                                 <div className="space-y-4 opacity-60">
@@ -1161,7 +1153,7 @@
                 useEffect(() => onBack(), [onBack]);
                 return null;
             }
-             
+               
             const attendees = event.attendeeUserIDs.map(id => usersById[id]);
 
             return (
@@ -1205,6 +1197,25 @@
             const [events, setEvents] = useState(INITIAL_EVENTS_DATA);
             const [chatMessages, setChatMessages] = useState(INITIAL_CHAT_MESSAGES_DATA);
             const [toast, setToast] = useState({ show: false, message: '' });
+
+            // This effect sets a CSS variable for the visual viewport height,
+            // which helps handle mobile keyboard resizing issues better than '100vh'.
+            useEffect(() => {
+                const setVisualViewportHeight = () => {
+                    if (typeof window.visualViewport !== 'undefined') {
+                        const vh = window.visualViewport.height * 0.01;
+                        document.documentElement.style.setProperty('--vh', `${vh}px`);
+                    }
+                };
+
+                // Set the value on initial load and whenever the viewport changes.
+                setVisualViewportHeight();
+                window.visualViewport?.addEventListener('resize', setVisualViewportHeight);
+
+                return () => {
+                    window.visualViewport?.removeEventListener('resize', setVisualViewportHeight);
+                };
+            }, []);
 
             const currentView = viewStack[viewStack.length - 1];
 
@@ -1386,15 +1397,13 @@
                 
                 return (
                     <div className="h-full flex flex-col relative">
-                        <div id="main-app-scroller" className="flex-grow overflow-y-auto" style={{ height: '100vh' }}>
-                            <div key={viewStack.length} className="view-container-animate h-full">
-                                {mainContent}
-                            </div>
+                        <div className="flex-grow flex flex-col overflow-hidden view-container-animate" key={viewStack.length}>
+                            {mainContent}
                         </div>
                         {['home', 'my-events'].includes(currentView.name) && (
-                                <button 
-                                 onClick={() => handleNavigate('create')} 
-                                 className="absolute bottom-24 right-6 w-14 h-14 rounded-full bg-salviagron text-white shadow-lg flex items-center justify-center hover:opacity-90 transition-transform active:scale-95 duration-150 border-[0.1mm] border-ecru"
+                                 <button 
+                                  onClick={() => handleNavigate('create')} 
+                                  className="absolute bottom-24 right-6 w-14 h-14 rounded-full bg-salviagron text-white shadow-lg flex items-center justify-center hover:opacity-90 transition-transform active:scale-95 duration-150 border-[0.1mm] border-ecru"
                             >
                                 <Icons.plus className="w-8 h-8" />
                             </button>
@@ -1406,7 +1415,7 @@
 
             return (
                 <div className="bg-slate-100 min-h-screen flex justify-center">
-                    <div className="w-full max-w-sm bg-white shadow-lg flex flex-col" style={{ height: '100vh', maxHeight: '100vh', overflow: 'hidden' }}>
+                    <div className="w-full max-w-sm bg-white shadow-lg flex flex-col" style={{ height: 'calc(var(--vh, 1vh) * 100)' }}>
                         {renderView()}
                     </div>
                      <Toast message={toast.message} show={toast.show} />

@@ -1245,6 +1245,7 @@
             )
         });
         
+        // --- Main App Component ---
         function App() {
             const [viewStack, setViewStack] = useState([{ name: 'login', payload: null }]);
             const [currentUser, setCurrentUser] = useState(null);
@@ -1266,23 +1267,36 @@
 
 
             useEffect(() => {
+                // This effect handles the mobile keyboard issue where the keyboard covers the app content.
+                // It listens for changes to the visual viewport (which shrinks when the keyboard appears)
+                // and dynamically sets the height of the app container to match, preventing overflow.
                 const appContainer = appContainerRef.current;
                 if (!appContainer) return;
+
                 const handleViewportResize = () => {
                     if (window.visualViewport) {
                         appContainer.style.height = `${window.visualViewport.height}px`;
+                        // When keyboard is open, scroll to the focused element
+                        if (document.activeElement && (document.activeElement.tagName === "INPUT" || document.activeElement.tagName === "TEXTAREA")) {
+                           setTimeout(() => {
+                                document.activeElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                           }, 100)
+                        }
                     }
                 };
-                handleViewportResize();
+                
+                handleViewportResize(); // Set initial height
+
                 if (window.visualViewport) {
                     window.visualViewport.addEventListener('resize', handleViewportResize);
                 }
+
                 return () => {
                     if (window.visualViewport) {
                         window.visualViewport.removeEventListener('resize', handleViewportResize);
                     }
                 };
-            }, []);
+            }, []); // Empty dependency array ensures this runs only once on mount
 
             useEffect(() => {
                 if (toast.show) {

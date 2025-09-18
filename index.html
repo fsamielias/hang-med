@@ -32,6 +32,14 @@
             -ms-overflow-style: none;  /* IE and Edge */
             scrollbar-width: none;  /* Firefox */
         }
+        /* Animation for view transitions */
+        @keyframes slideInFromRight {
+            from { transform: translateX(50%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        .view-container-animate {
+            animation: slideInFromRight 0.25s ease-out;
+        }
     </style>
     <script>
         tailwind.config = {
@@ -55,7 +63,7 @@
 
     <script type="text/babel">
         // --- CONSTANTS & HELPER DATA (Moved outside component for efficiency) ---
-        const { useState, useEffect, useRef, memo, useMemo, useLayoutEffect } = React;
+        const { useState, useEffect, useRef, memo, useMemo, useCallback } = React;
 
         const USERS_DATA = [
             { userID: 1, name: 'Sofia', email: 'sofia@example.com' },
@@ -120,7 +128,7 @@
             <button
                 type={type}
                 onClick={onClick}
-                className={`w-full text-white font-bold py-3 px-4 rounded-full bg-salviagron hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-salviagron transition-all duration-300 shadow-sm ${className}`}
+                className={`w-full text-white font-bold py-3 px-4 rounded-full bg-salviagron hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-salviagron transition-transform active:scale-95 duration-150 shadow-sm ${className}`}
             >
                 {children}
             </button>
@@ -141,7 +149,7 @@
                             <button
                                 key={item.view}
                                 onClick={() => onNavigate(item.view)}
-                                className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-colors duration-200 relative ${isActive ? 'text-salviagron' : 'text-slate-400 hover:text-salviagron'}`}
+                                className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-transform active:scale-95 duration-150 relative ${isActive ? 'text-salviagron' : 'text-slate-400 hover:text-salviagron'}`}
                             >
                                 <item.icon className="w-6 h-6" />
                                 <span className="text-xs font-bold">{item.label}</span>
@@ -170,7 +178,7 @@
                         </select>
                         <ActionButton type="submit">Logga in</ActionButton>
                     </form>
-                    <button onClick={() => onNavigate('signup')} className="text-sm text-[#2E2E2E] mt-4 hover:underline">Inget konto? Skapa ett</button>
+                    <button onClick={() => onNavigate('signup')} className="text-sm text-[#2E2E2E] mt-4 hover:underline transition-transform active:scale-95 duration-150">Inget konto? Skapa ett</button>
                     <p className="text-xs text-slate-500 mt-8 text-center max-w-xs mx-auto">
                         Ett tips för en trygg träff: Välj en offentlig plats när ni ses för första gången och använd sunt förnuft. Ha så kul!
                     </p>
@@ -195,7 +203,7 @@
                         <div><input type="password" placeholder="Lösenord" required className="w-full px-4 py-3 border border-slate-200/80 rounded-full focus:outline-none focus:ring-2 focus:ring-salviagron bg-white" /></div>
                         <ActionButton type="submit">Skapa konto</ActionButton>
                     </form>
-                    <button onClick={() => onNavigate('login')} className="text-sm text-[#2E2E2E] mt-4 hover:underline">Har du redan ett konto? Logga in</button>
+                    <button onClick={() => onNavigate('login')} className="text-sm text-[#2E2E2E] mt-4 hover:underline transition-transform active:scale-95 duration-150">Har du redan ett konto? Logga in</button>
                 </div>
             );
         });
@@ -216,7 +224,7 @@
             return (
                 <div className="flex flex-col h-full bg-white">
                     <header className="p-4 border-b border-slate-200/50 bg-white/80 backdrop-blur-sm sticky top-0 z-10">
-                        <h1 className="text-2xl font-bold text-salviagron">Träffar</h1>
+                        <h1 className="text-3xl font-bold text-salviagron">Träffar</h1>
                         <p className="text-sm text-[#2E2E2E] mt-1">Hej {currentUser.name}, hitta eller skapa något att göra!</p>
                     </header>
                     <div className="px-4 py-2 border-b border-slate-200/50 sticky top-[80px] bg-white/80 backdrop-blur-sm z-10">
@@ -225,7 +233,7 @@
                                 <button
                                     key={filter}
                                     onClick={() => setActiveFilter(prevFilter => prevFilter === filter ? 'Alla' : filter)}
-                                    className={`px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-colors ${activeFilter === filter ? 'bg-salviagron text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                                    className={`px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-colors transition-transform active:scale-95 duration-150 ${activeFilter === filter ? 'bg-salviagron text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
                                 >
                                     {filter}
                                 </button>
@@ -272,6 +280,7 @@
             const [newMessage, setNewMessage] = useState('');
             const chatContainerRef = useRef(null);
             const inputRef = useRef(null);
+            const formRef = useRef(null);
 
             useEffect(() => {
                 if (chatContainerRef.current) {
@@ -287,17 +296,24 @@
                     inputRef.current?.focus();
                 }
             };
+
+            const handleKeyDown = (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    formRef.current.requestSubmit();
+                }
+            };
+
             return (
                 <div className="flex-grow flex flex-col overflow-hidden">
-                    <div ref={chatContainerRef} className="flex-1 overflow-y-auto space-y-3 p-2 flex flex-col">
-                        <div className="flex-grow"></div>
+                    <div ref={chatContainerRef} className="flex-1 overflow-y-auto space-y-3 p-2">
                         {messages.map(message => {
                             const sender = usersById[message.userID];
                             const isCurrentUser = sender.userID === currentUser.userID;
                             return (
                                 <div key={message.messageID} className={`flex items-start gap-2 ${isCurrentUser ? 'justify-end' : 'justify-start'}`}>
                                     {!isCurrentUser && (
-                                        <div className="w-8 h-8 rounded-full bg-[#F5F5DC] flex items-center justify-center font-bold text-[#2E2E2E]/70 text-sm flex-shrink-0">
+                                        <div className="w-8 h-8 rounded-full bg-ecru flex items-center justify-center font-bold text-[#2E2E2E]/70 text-sm flex-shrink-0">
                                             {sender.name.charAt(0)}
                                         </div>
                                     )}
@@ -314,11 +330,12 @@
                         })}
                         {messages.length === 0 && <p className="text-sm text-slate-400 text-center py-4">Inga meddelanden än. Bli den första att skriva!</p>}
                     </div>
-                     <form onSubmit={handleSend} className="p-2 flex-shrink-0 relative">
+                     <form ref={formRef} onSubmit={handleSend} className="p-2 flex-shrink-0 relative">
                         <textarea 
                             ref={inputRef}
                             value={newMessage}
                             onChange={(e) => setNewMessage(e.target.value)}
+                            onKeyDown={handleKeyDown}
                             placeholder="Skriv ett meddelande..."
                             className="w-full p-3 pr-14 border border-slate-200/80 rounded-xl focus:outline-none focus:ring-2 focus:ring-salviagron bg-white resize-none"
                             rows="2"
@@ -343,7 +360,7 @@
             return (
                 <div className="flex flex-col h-full bg-white">
                     <header className="p-4 flex items-center justify-between border-b border-slate-200/50 bg-white/50 backdrop-blur-sm">
-                        <button onClick={onBack} className="p-2 rounded-full hover:bg-slate-100/60">
+                        <button onClick={onBack} className="p-2 rounded-full hover:bg-slate-100/60 transition-transform active:scale-95 duration-150">
                             <Icons.arrowLeft className="w-6 h-6 text-[#2E2E2E]" />
                         </button>
                         <div className="flex-1"></div> {/* Spacer */}
@@ -363,7 +380,7 @@
                             <div className="flex flex-wrap gap-2 pt-2">
                                 {attendees.map(attendee => attendee && (
                                     <div key={attendee.userID} className={`flex items-center gap-2 pr-3 py-1 bg-slate-100 text-[#2E2E2E] rounded-full text-sm ${attendee.userID === currentUser.userID ? 'ring-2 ring-salviagron' : ''}`}>
-                                        <div className="w-6 h-6 rounded-full bg-[#F5F5DC] flex items-center justify-center font-bold text-[#2E2E2E]/70 text-xs">
+                                        <div className="w-6 h-6 rounded-full bg-ecru flex items-center justify-center font-bold text-[#2E2E2E]/70 text-xs">
                                             {attendee.name.charAt(0)}
                                         </div>
                                         {attendee.name}
@@ -374,7 +391,7 @@
                         {hasJoined && (
                              <button 
                                 onClick={() => onNavigate('chat-detail', event.eventID)} 
-                                className="w-full text-salviagron font-bold py-3 px-4 rounded-full bg-transparent border-2 border-salviagron hover:bg-salviagron/10 transition-colors duration-300"
+                                className="w-full text-salviagron font-bold py-3 px-4 rounded-full bg-transparent border-2 border-salviagron hover:bg-salviagron/10 transition-colors duration-300 transition-transform active:scale-95"
                             >
                                 Visa chatt
                             </button>
@@ -387,7 +404,7 @@
                             </ActionButton>
                         )}
                         {hasJoined ? (
-                            <button onClick={() => onLeave(event.eventID)} className="w-full text-red-700 font-semibold py-3 px-4 rounded-full bg-red-100 hover:bg-red-200 transition-all duration-300 shadow-sm">
+                            <button onClick={() => onLeave(event.eventID)} className="w-full text-red-700 font-semibold py-3 px-4 rounded-full bg-red-100 hover:bg-red-200 transition-all duration-300 shadow-sm transition-transform active:scale-95">
                                 Gå ut från träff
                             </button>
                         ) : (
@@ -408,7 +425,37 @@
             const [time, setTime] = useState('');
             const [description, setDescription] = useState('');
             const [isGenerating, setIsGenerating] = useState(false);
+            const [locationSuggestions, setLocationSuggestions] = useState([]);
             const today = new Date().toISOString().split('T')[0];
+
+            const GOTEBORG_LOCATIONS = [
+                "Östra Hamngatan, Göteborg", "Kungsgatan, Göteborg", "Vasagatan, Göteborg",
+                "Södra Vägen, Göteborg", "Drottningtorget, Göteborg", "Brunnsparsgatan, Göteborg",
+                "Teatergatan, Göteborg", "Magasinsgatan, Göteborg", "Postgatan, Göteborg",
+                "Rådmansgatan, Göteborg", "Kyrkogatan, Göteborg", "Vallgatan, Göteborg",
+                "Storgatan, Göteborg", "Engelbrektsgatan, Göteborg", "Övre Husargatan, Göteborg",
+                "Östra Larmgatan, Göteborg", "Lilla Bommen, Göteborg", "Packhusplatsen, Göteborg",
+                "Norra Hamngatan, Göteborg", "Kaserntorget, Göteborg", "Hedbergsgatan, Göteborg",
+                "Kapellplatsen, Göteborg"
+            ];
+
+            const handleLocationChange = (e) => {
+                const value = e.target.value;
+                setLocation(value);
+                if (value.length > 1) {
+                    const suggestions = GOTEBORG_LOCATIONS.filter(loc => 
+                        loc.toLowerCase().includes(value.toLowerCase())
+                    );
+                    setLocationSuggestions(suggestions);
+                } else {
+                    setLocationSuggestions([]);
+                }
+            };
+
+            const selectSuggestion = (suggestion) => {
+                setLocation(suggestion);
+                setLocationSuggestions([]);
+            };
             
             const generateAIDescription = () => {
                 setIsGenerating(true);
@@ -450,7 +497,7 @@
             return (
                 <div className="flex flex-col h-full bg-white">
                     <header className="p-4 flex items-center justify-between border-b border-slate-200/50 bg-white/50 backdrop-blur-sm sticky top-0">
-                        <button onClick={onBack} className="p-2 rounded-full hover:bg-slate-100/60">
+                        <button onClick={onBack} className="p-2 rounded-full hover:bg-slate-100/60 transition-transform active:scale-95 duration-150">
                              <Icons.arrowLeft className="w-6 h-6 text-[#2E2E2E]" />
                         </button>
                         <h1 className="text-xl font-semibold text-salviagron">Skapa ny träff</h1>
@@ -491,7 +538,30 @@
                             </div>
                             <div>
                                 <label className="text-sm font-bold text-[#2E2E2E]">Plats</label>
-                                <input type="text" value={location} onChange={(e) => setLocation(e.target.value)} required className="w-full mt-1 p-2 border border-slate-200/80 rounded-lg focus:outline-none focus:ring-2 focus:ring-salviagron bg-white" maxLength="70" />
+                                <div className="relative">
+                                    <input 
+                                        type="text" 
+                                        value={location} 
+                                        onChange={handleLocationChange} 
+                                        required 
+                                        className="w-full mt-1 p-2 border border-slate-200/80 rounded-lg focus:outline-none focus:ring-2 focus:ring-salviagron bg-white" 
+                                        maxLength="70" 
+                                        autoComplete="off"
+                                    />
+                                    {locationSuggestions.length > 0 && (
+                                        <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg">
+                                            {locationSuggestions.map((suggestion, index) => (
+                                                <div 
+                                                    key={index}
+                                                    onClick={() => selectSuggestion(suggestion)}
+                                                    className="p-2 hover:bg-slate-100 cursor-pointer"
+                                                >
+                                                    {suggestion}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                             <div className="flex gap-4">
                                 <div className="flex-1">
@@ -512,7 +582,7 @@
                             <div>
                                 <div className="flex justify-between items-center">
                                     <label className="text-sm font-bold text-[#2E2E2E]">Beskrivning</label>
-                                    <button type="button" onClick={generateAIDescription} disabled={isGenerating} className="text-sm text-salviagron hover:underline font-semibold disabled:opacity-50">{isGenerating ? 'Genererar...' : 'Generera med AI'}</button>
+                                    <button type="button" onClick={generateAIDescription} disabled={isGenerating} className="text-sm text-salviagron hover:underline font-semibold disabled:opacity-50 transition-transform active:scale-95 duration-150">{isGenerating ? 'Genererar...' : 'Generera med AI'}</button>
                                 </div>
                                 <textarea value={description} onChange={e => setDescription(e.target.value)} required rows="4" className="w-full mt-1 p-2 border border-slate-200/80 rounded-lg focus:outline-none focus:ring-2 focus:ring-salviagron bg-white" maxLength="280"></textarea>
                             </div>
@@ -572,7 +642,7 @@
             return (
                 <div className="flex flex-col h-full bg-white">
                     <header className="p-4 flex items-center justify-between border-b border-slate-200/50 bg-white/50 backdrop-blur-sm sticky top-0">
-                        <button onClick={onBack} className="p-2 rounded-full hover:bg-slate-100/60">
+                        <button onClick={onBack} className="p-2 rounded-full hover:bg-slate-100/60 transition-transform active:scale-95 duration-150">
                              <Icons.arrowLeft className="w-6 h-6 text-[#2E2E2E]" />
                         </button>
                         <h1 className="text-xl font-semibold text-salviagron">Redigera träff</h1>
@@ -736,23 +806,23 @@
             
             return (
                 <div className="flex flex-col h-full bg-white">
-                    <header className="p-4 border-b border-slate-200/50 bg-white/80 backdrop-blur-sm sticky top-0 z-10"><h1 className="text-2xl font-bold text-salviagron">Mina träffar</h1></header>
+                    <header className="p-4 border-b border-slate-200/50 bg-white/80 backdrop-blur-sm sticky top-0 z-10"><h1 className="text-3xl font-bold text-salviagron">Mina träffar</h1></header>
                     <main className="flex-grow overflow-y-auto p-4 space-y-6">
                          <div>
-                            <h2 className="text-xl font-bold text-[#2E2E2E] text-center mb-3 underline">På gång för mig ({categorizedEvents.upcomingJoined.length})</h2>
+                            <h2 className="text-lg font-bold text-[#2E2E2E] text-center mb-3 underline">På gång för mig ({categorizedEvents.upcomingJoined.length})</h2>
                             {categorizedEvents.upcomingJoined.length > 0 ? (
                                 <div className="space-y-4">{categorizedEvents.upcomingJoined.map(event => (<EventCard key={event.eventID} event={event} onNavigate={onNavigate} currentUser={currentUser} />))}</div>
                             ) : (<EmptyState icon={Icons.calendar} title="Inga kommande träffar" text="Gå med i en träff för att se den här." />)}
                         </div>
                          <div>
-                            <h2 className="text-xl font-bold text-[#2E2E2E] text-center mb-3 underline">Mina skapade träffar ({categorizedEvents.createdEvents.length})</h2>
+                            <h2 className="text-lg font-bold text-[#2E2E2E] text-center mb-3 underline">Mina skapade träffar ({categorizedEvents.createdEvents.length})</h2>
                             {categorizedEvents.createdEvents.length > 0 ? (
                                 <div className="space-y-4">{categorizedEvents.createdEvents.map(event => (<EventCard key={event.eventID} event={event} onNavigate={onNavigate} currentUser={currentUser} />))}</div>
                             ) : (<EmptyState icon={Icons.plus} title="Du har inte skapat något" text="Klicka på plus-knappen för att skapa din första träff." />)}
                         </div>
                          {categorizedEvents.pastJoined.length > 0 && (
                             <div>
-                                <h2 className="text-xl font-bold text-[#2E2E2E] text-center mb-3 underline">Tidigare träffar ({categorizedEvents.pastJoined.length})</h2>
+                                <h2 className="text-lg font-bold text-[#2E2E2E] text-center mb-3 underline">Tidigare träffar ({categorizedEvents.pastJoined.length})</h2>
                                 <div className="space-y-4 opacity-60">
                                     {categorizedEvents.pastJoined.map(event => (<EventCard key={event.eventID} event={event} onNavigate={onNavigate} currentUser={currentUser} />))}
                                 </div>
@@ -790,11 +860,11 @@
             return (
                 <div className="flex flex-col h-full bg-slate-50">
                     <header className="p-4 bg-white border-b border-slate-200/50">
-                        <h1 className="text-2xl font-bold text-salviagron">Profil</h1>
+                        <h1 className="text-3xl font-bold text-salviagron">Profil</h1>
                     </header>
                     <main className="flex-grow overflow-y-auto p-4 space-y-6">
                         <section className="flex flex-col items-center text-center space-y-2">
-                             <div className="w-24 h-24 rounded-full bg-[#F5F5DC] flex items-center justify-center text-4xl font-bold text-[#2E2E2E] ring-4 ring-white/50 shadow-sm">{currentUser.name.charAt(0)}</div>
+                             <div className="w-24 h-24 rounded-full bg-ecru flex items-center justify-center text-4xl font-bold text-[#2E2E2E] ring-4 ring-white/50 shadow-sm">{currentUser.name.charAt(0)}</div>
                              <h2 className="text-2xl font-bold text-[#2E2E2E] pt-2">{currentUser.name}</h2>
                              <p className="text-[#2E2E2E]/80">{currentUser.email}</p>
                         </section>
@@ -980,11 +1050,11 @@
             return (
                 <div className="flex flex-col h-full bg-white">
                     <header className="p-4 border-b border-slate-200/50 bg-white/80 backdrop-blur-sm sticky top-0 z-10">
-                        <h1 className="text-2xl font-bold text-salviagron">Chattar</h1>
+                        <h1 className="text-3xl font-bold text-salviagron">Chattar</h1>
                     </header>
                     <main className="flex-grow overflow-y-auto p-4 space-y-6">
                         <div>
-                            <h2 className="text-xl font-bold text-[#2E2E2E] text-center mb-3 underline">På gång för mig ({attendingChats.length})</h2>
+                            <h2 className="text-lg font-bold text-[#2E2E2E] text-center mb-3 underline">På gång för mig ({attendingChats.length})</h2>
                             {attendingChats.length > 0 ? (
                                 <div className="space-y-4">
                                     {attendingChats.map(event => (
@@ -996,7 +1066,7 @@
                             )}
                         </div>
                         <div>
-                            <h2 className="text-xl font-bold text-[#2E2E2E] text-center mb-3 underline">Mina skapade träffar ({createdChats.length})</h2>
+                            <h2 className="text-lg font-bold text-[#2E2E2E] text-center mb-3 underline">Mina skapade träffar ({createdChats.length})</h2>
                             {createdChats.length > 0 ? (
                                 <div className="space-y-4">
                                     {createdChats.map(event => (
@@ -1021,8 +1091,6 @@
             }
              
             const attendees = event.attendeeUserIDs.map(id => usersById[id]);
-            const isCreator = currentUser.userID === event.creatorUserID;
-            const hasJoined = true; // By definition, if you're in the chat detail screen, you've joined.
 
             return (
                 <div className="flex flex-col h-full bg-white">
@@ -1038,7 +1106,7 @@
                              <div className="flex flex-wrap gap-2">
                                 {attendees.map(attendee => attendee && (
                                     <div key={attendee.userID} className={`flex items-center gap-2 pr-3 py-1 bg-slate-100 text-[#2E2E2E] rounded-full text-sm`}>
-                                        <div className="w-6 h-6 rounded-full bg-[#F5F5DC] flex items-center justify-center font-bold text-[#2E2E2E]/70 text-xs">
+                                        <div className="w-6 h-6 rounded-full bg-ecru flex items-center justify-center font-bold text-[#2E2E2E]/70 text-xs">
                                             {attendee.name.charAt(0)}
                                         </div>
                                         {attendee.name}
@@ -1241,18 +1309,20 @@
                         mainContent = <HomeScreen events={events} onNavigate={handleNavigate} currentUser={currentUser} />;
                 }
 
-                const showBottomNav = true;
+                const showBottomNav = !['chat-detail'].includes(currentView.name);
                 const activeNav = currentView.name === 'chat-detail' ? 'chat' : currentView.name;
                 
                 return (
                     <div className="h-full flex flex-col relative">
                         <div id="main-app-scroller" className="flex-grow overflow-y-auto" style={{ height: '100vh' }}>
-                            {mainContent}
+                            <div key={viewStack.length} className="view-container-animate h-full">
+                                {mainContent}
+                            </div>
                         </div>
                         {['home', 'my-events'].includes(currentView.name) && (
                                 <button 
                                  onClick={() => handleNavigate('create')} 
-                                 className="absolute bottom-24 right-6 w-14 h-14 rounded-full bg-salviagron text-white shadow-lg flex items-center justify-center hover:opacity-90 transition-opacity"
+                                 className="absolute bottom-24 right-6 w-14 h-14 rounded-full bg-salviagron text-white shadow-lg flex items-center justify-center hover:opacity-90 transition-transform active:scale-95 duration-150 border-[0.1mm] border-ljusbla"
                             >
                                 <Icons.plus className="w-8 h-8" />
                             </button>
@@ -1276,17 +1346,4 @@
     </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
 

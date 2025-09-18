@@ -301,27 +301,6 @@
                     chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
                 }
             }, [messages]);
-            
-            // New effect to handle keyboard visibility on mobile
-            useEffect(() => {
-                const inputElement = inputRef.current;
-                if (!inputElement) return;
-
-                const handleFocus = () => {
-                    // We wait a short moment for the keyboard to finish its animation
-                    setTimeout(() => {
-                        // This command scrolls the form into the visible area of the browser
-                        formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
-                    }, 300);
-                };
-
-                inputElement.addEventListener('focus', handleFocus);
-
-                // Cleanup the event listener when the component is unmounted
-                return () => {
-                    inputElement.removeEventListener('focus', handleFocus);
-                };
-            }, []); // This effect runs only once when the component mounts
 
             const handleSend = (e) => {
                 e.preventDefault();
@@ -329,6 +308,13 @@
                     onSendMessage(eventId, newMessage);
                     setNewMessage('');
                     inputRef.current?.focus();
+                }
+            };
+
+            const handleKeyDown = (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    formRef.current.requestSubmit();
                 }
             };
 
@@ -364,6 +350,7 @@
                             ref={inputRef}
                             value={newMessage}
                             onChange={(e) => setNewMessage(e.target.value)}
+                            onKeyDown={handleKeyDown}
                             placeholder="Skriv ett meddelande..."
                             className="w-full p-3 pr-14 border border-slate-200/80 rounded-xl focus:outline-none focus:ring-2 focus:ring-salviagron bg-white resize-none"
                             rows="2"
@@ -894,7 +881,7 @@
                                 <div className="space-y-4">{categorizedEvents.createdEvents.map(event => (<EventCard key={event.eventID} event={event} onNavigate={onNavigate} currentUser={currentUser} />))}</div>
                             ) : (<EmptyState icon={Icons.plus} title="Du har inte skapat något" text="Klicka på plus-knappen för att skapa din första träff." />)}
                         </div>
-                        {categorizedEvents.pastJoined.length > 0 && (
+                         {categorizedEvents.pastJoined.length > 0 && (
                             <div>
                                 <h2 className="text-xl font-bold text-[#2E2E2E] text-center mb-3 underline">Tidigare träffar ({categorizedEvents.pastJoined.length})</h2>
                                 <div className="space-y-4 opacity-60">
@@ -1170,112 +1157,43 @@
         const ChatDetailScreen = memo(({ eventId, events, usersById, currentUser, chatMessages, onSendMessage, onBack }) => {
             const event = useMemo(() => events.find(e => e.eventID === eventId), [events, eventId]);
 
-            const [newMessage, setNewMessage] = useState('');
-            const chatContainerRef = useRef(null);
-            const inputRef = useRef(null);
-            const formRef = useRef(null);
-
-            const messages = chatMessages[eventId] || [];
-
-            useEffect(() => {
-                if (chatContainerRef.current) {
-                    chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
-                }
-            }, [messages]);
-            
-            useEffect(() => {
-                const inputElement = inputRef.current;
-                if (!inputElement) return;
-
-                const handleFocus = () => {
-                    setTimeout(() => {
-                        formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
-                    }, 300);
-                };
-
-                inputElement.addEventListener('focus', handleFocus);
-                return () => {
-                    inputElement.removeEventListener('focus', handleFocus);
-                };
-            }, []);
-
-            const handleSend = (e) => {
-                e.preventDefault();
-                if (newMessage.trim()) {
-                    onSendMessage(eventId, newMessage);
-                    setNewMessage('');
-                    inputRef.current?.focus();
-                }
-            };
-
             if (!event) {
                 useEffect(() => onBack(), [onBack]);
                 return null;
             }
-               
+             
             const attendees = event.attendeeUserIDs.map(id => usersById[id]);
 
             return (
                 <div className="flex flex-col h-full bg-white">
-                    <header className="p-4 flex items-center gap-4 border-b border-slate-200/50 bg-white/80 backdrop-blur-sm sticky top-0 z-10 flex-shrink-0">
+                    <header className="p-4 flex items-center gap-4 border-b border-slate-200/50 bg-white/80 backdrop-blur-sm sticky top-0 z-10">
                          <button onClick={onBack} className="p-2 rounded-full hover:bg-slate-100/60">
                             <Icons.arrowLeft className="w-6 h-6 text-[#2E2E2E]" />
                         </button>
                         <h1 className="text-lg font-bold text-[#2E2E2E] truncate">{event.title}</h1>
                     </header>
-                    
-                    <main ref={chatContainerRef} className="flex-1 overflow-y-auto p-4 space-y-4">
-                        <p className="text-sm text-slate-500 break-words">{event.description}</p>
-                        <div className="flex flex-wrap gap-2">
-                            {attendees.map(attendee => attendee && (
-                                <div key={attendee.userID} className={`flex items-center gap-2 pr-3 py-1 bg-slate-100 text-[#2E2E2E] rounded-full text-sm`}>
-                                    <div className="w-6 h-6 rounded-full bg-ecru flex items-center justify-center font-bold text-[#2E2E2E]/70 text-xs">
-                                        {attendee.name.charAt(0)}
-                                    </div>
-                                    {attendee.name}
-                                </div>
-                            ))}
-                        </div>
-                        
-                        <div className="space-y-3">
-                             {messages.map(message => {
-                                const sender = usersById[message.userID];
-                                const isCurrentUser = sender.userID === currentUser.userID;
-                                return (
-                                    <div key={message.messageID} className={`flex items-start gap-2 ${isCurrentUser ? 'justify-end' : 'justify-start'}`}>
-                                        {!isCurrentUser && (
-                                            <div className="w-8 h-8 rounded-full bg-ecru flex items-center justify-center font-bold text-[#2E2E2E]/70 text-sm flex-shrink-0">
-                                                {sender.name.charAt(0)}
-                                            </div>
-                                        )}
-                                        <div className={`flex flex-col ${isCurrentUser ? 'items-end' : 'items-start'}`}>
-                                            {!isCurrentUser && (
-                                                <span className="text-xs text-slate-500 mb-0.5 ml-3">{sender.name}</span>
-                                            )}
-                                            <div className={`max-w-xs p-3 rounded-2xl ${isCurrentUser ? 'bg-salviagron text-white rounded-br-none' : 'bg-slate-100 text-slate-800 rounded-bl-none'}`}>
-                                                <p className="text-sm break-words">{message.text}</p>
-                                            </div>
+                    <main className="flex-grow flex flex-col p-4 space-y-4 overflow-hidden">
+                        <p className="text-sm text-slate-500 break-words flex-shrink-0">{event.description}</p>
+                        <div className="flex-shrink-0">
+                             <div className="flex flex-wrap gap-2">
+                                {attendees.map(attendee => attendee && (
+                                    <div key={attendee.userID} className={`flex items-center gap-2 pr-3 py-1 bg-slate-100 text-[#2E2E2E] rounded-full text-sm`}>
+                                        <div className="w-6 h-6 rounded-full bg-ecru flex items-center justify-center font-bold text-[#2E2E2E]/70 text-xs">
+                                            {attendee.name.charAt(0)}
                                         </div>
+                                        {attendee.name}
                                     </div>
-                                );
-                            })}
-                            {messages.length === 0 && <p className="text-sm text-slate-400 text-center py-4">Inga meddelanden än. Bli den första att skriva!</p>}
+                                ))}
+                            </div>
                         </div>
+                        <ChatComponent 
+                            eventId={eventId} 
+                            messages={chatMessages[eventId] || []} 
+                            usersById={usersById} 
+                            currentUser={currentUser} 
+                            onSendMessage={onSendMessage} 
+                        />
                     </main>
-                    
-                    <form ref={formRef} onSubmit={handleSend} className="p-2 flex-shrink-0 relative border-t border-slate-200/50">
-                        <textarea 
-                            ref={inputRef}
-                            value={newMessage}
-                            onChange={(e) => setNewMessage(e.target.value)}
-                            placeholder="Skriv ett meddelande..."
-                            className="w-full p-3 pr-14 border border-slate-200/80 rounded-xl focus:outline-none focus:ring-2 focus:ring-salviagron bg-white resize-none"
-                            rows="2"
-                        ></textarea>
-                        <button type="submit" className="absolute top-3 right-3 p-2 rounded-full bg-salviagron text-white hover:opacity-90 transition-opacity">
-                            <Icons.send className="w-5 h-5" />
-                        </button>
-                    </form>
                 </div>
             )
         });
@@ -1287,25 +1205,7 @@
             const [events, setEvents] = useState(INITIAL_EVENTS_DATA);
             const [chatMessages, setChatMessages] = useState(INITIAL_CHAT_MESSAGES_DATA);
             const [toast, setToast] = useState({ show: false, message: '' });
-
-            // This effect sets a CSS variable for the visual viewport height,
-            // which helps handle mobile keyboard resizing issues better than '100vh'.
-            useEffect(() => {
-                const setVisualViewportHeight = () => {
-                    if (typeof window.visualViewport !== 'undefined') {
-                        const vh = window.visualViewport.height * 0.01;
-                        document.documentElement.style.setProperty('--vh', `${vh}px`);
-                    }
-                };
-
-                // Set the value on initial load and whenever the viewport changes.
-                setVisualViewportHeight();
-                window.visualViewport?.addEventListener('resize', setVisualViewportHeight);
-
-                return () => {
-                    window.visualViewport?.removeEventListener('resize', setVisualViewportHeight);
-                };
-            }, []);
+            const appContainerRef = useRef(null);
 
             const currentView = viewStack[viewStack.length - 1];
 
@@ -1316,6 +1216,32 @@
                 }, {}), 
             [users]);
 
+
+            useEffect(() => {
+                // This effect handles the mobile keyboard issue where the keyboard covers the app content.
+                // It listens for changes to the visual viewport (which shrinks when the keyboard appears)
+                // and dynamically sets the height of the app container to match, preventing overflow.
+                const appContainer = appContainerRef.current;
+                if (!appContainer) return;
+
+                const handleViewportResize = () => {
+                    if (window.visualViewport) {
+                        appContainer.style.height = `${window.visualViewport.height}px`;
+                    }
+                };
+                
+                handleViewportResize(); // Set initial height
+
+                if (window.visualViewport) {
+                    window.visualViewport.addEventListener('resize', handleViewportResize);
+                }
+
+                return () => {
+                    if (window.visualViewport) {
+                        window.visualViewport.removeEventListener('resize', handleViewportResize);
+                    }
+                };
+            }, []); // Empty dependency array ensures this runs only once on mount
 
             useEffect(() => {
                 if (toast.show) {
@@ -1482,18 +1408,20 @@
                         mainContent = <HomeScreen events={events} onNavigate={handleNavigate} currentUser={currentUser} />;
                 }
 
-                const showBottomNav = !['chat-detail'].includes(currentView.name);
+                const showBottomNav = !['create', 'details', 'edit-event', 'chat-detail', 'event-history'].includes(currentView.name);
                 const activeNav = currentView.name === 'chat-detail' ? 'chat' : currentView.name;
                 
                 return (
                     <div className="h-full flex flex-col relative">
-                        <div className="flex-grow flex flex-col overflow-y-auto view-container-animate" key={viewStack.length}>
-                            {mainContent}
+                        <div id="main-app-scroller" className="flex-grow overflow-y-auto" style={{ height: '100vh' }}>
+                            <div key={viewStack.length} className="view-container-animate h-full">
+                                {mainContent}
+                            </div>
                         </div>
                         {['home', 'my-events'].includes(currentView.name) && (
-                                 <button 
-                                  onClick={() => handleNavigate('create')} 
-                                  className="absolute bottom-24 right-6 w-14 h-14 rounded-full bg-salviagron text-white shadow-lg flex items-center justify-center hover:opacity-90 transition-transform active:scale-95 duration-150 border-[0.1mm] border-ecru"
+                                <button 
+                                 onClick={() => handleNavigate('create')} 
+                                 className="absolute bottom-24 right-6 w-14 h-14 rounded-full bg-salviagron text-white shadow-lg flex items-center justify-center hover:opacity-90 transition-transform active:scale-95 duration-150 border-[0.1mm] border-ecru"
                             >
                                 <Icons.plus className="w-8 h-8" />
                             </button>
@@ -1505,7 +1433,7 @@
 
             return (
                 <div className="bg-slate-100 min-h-screen flex justify-center">
-                    <div className="w-full max-w-sm bg-white shadow-lg flex flex-col" style={{ height: 'calc(var(--vh, 1vh) * 100)' }}>
+                    <div ref={appContainerRef} className="w-full max-w-sm bg-white shadow-lg flex flex-col" style={{ height: '100vh', maxHeight: '100vh', overflow: 'hidden' }}>
                         {renderView()}
                     </div>
                      <Toast message={toast.message} show={toast.show} />
@@ -1517,7 +1445,4 @@
     </script>
 </body>
 </html>
-
-
-
 

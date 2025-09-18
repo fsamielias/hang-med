@@ -1418,7 +1418,7 @@
                 
                 return (
                     <div className="h-full flex flex-col relative">
-                        <div className="flex-grow flex flex-col overflow-hidden view-container-animate" key={viewStack.length}>
+                        <div className="flex-grow flex flex-col overflow-y-auto view-container-animate" key={viewStack.length}>
                             {mainContent}
                         </div>
                         {['home', 'my-events'].includes(currentView.name) && (
@@ -1448,5 +1448,6 @@
     </script>
 </body>
 </html>
+
 
 

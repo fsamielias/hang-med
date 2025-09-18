@@ -301,6 +301,27 @@
                     chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
                 }
             }, [messages]);
+            
+            // New effect to handle keyboard visibility on mobile
+            useEffect(() => {
+                const inputElement = inputRef.current;
+                if (!inputElement) return;
+
+                const handleFocus = () => {
+                    // We wait a short moment for the keyboard to finish its animation
+                    setTimeout(() => {
+                        // This command scrolls the form into the visible area of the browser
+                        formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+                    }, 300);
+                };
+
+                inputElement.addEventListener('focus', handleFocus);
+
+                // Cleanup the event listener when the component is unmounted
+                return () => {
+                    inputElement.removeEventListener('focus', handleFocus);
+                };
+            }, []); // This effect runs only once when the component mounts
 
             const handleSend = (e) => {
                 e.preventDefault();
@@ -1427,4 +1448,5 @@
     </script>
 </body>
 </html>
+
 

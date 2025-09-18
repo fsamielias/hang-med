@@ -72,9 +72,9 @@
         ];
 
         const INITIAL_EVENTS_DATA = [
-            { eventID: 101, title: 'Morgonfika på Vete-Katten', description: 'En klassisk svensk fika för att starta dagen.', category: 'Fika', location: 'Järntorget 3, Göteborg', dateTime: '2025-09-20T10:00:00', creatorUserID: 2, attendeeUserIDs: [2, 5] },
-            { eventID: 102, title: 'Avkopplande promenad i Slottsskogen', description: 'En fridfull promenad i vacker natur.', category: 'Promenad', location: 'Säldammsbacken, Göteborg', dateTime: '2025-09-21T14:30:00', creatorUserID: 1, attendeeUserIDs: [1, 5] },
-            { eventID: 103, title: 'Badminton i Fjäderborgen', description: 'Vänskapsmatch i badminton, alla nivåer välkomna.', category: 'Sport', location: 'Södra Långebergsgatan 4, Göteborg', dateTime: '2025-09-22T18:00:00', creatorUserID: 1, attendeeUserIDs: [1] },
+            { eventID: 101, title: 'Morgonfika på Vete-Katten', description: 'En klassisk svensk fika för att starta dagen.', category: 'Fika', location: 'Järntorget 3, Göteborg', dateTime: '2025-09-20T10:00:00', creatorUserID: 2, attendeeUserIDs: [2, 5], isTimeFlexible: false },
+            { eventID: 102, title: 'Avkopplande promenad i Slottsskogen', description: 'En fridfull promenad i vacker natur.', category: 'Promenad', location: 'Säldammsbacken, Göteborg', dateTime: '2025-09-21T14:30:00', creatorUserID: 1, attendeeUserIDs: [1, 5], isTimeFlexible: false },
+            { eventID: 103, title: 'Badminton i Fjäderborgen', description: 'Vänskapsmatch i badminton, alla nivåer välkomna.', category: 'Sport', location: 'Södra Långebergsgatan 4, Göteborg', dateTime: '2025-09-22T18:00:00', creatorUserID: 1, attendeeUserIDs: [1], isTimeFlexible: false },
         ];
 
         const INITIAL_CHAT_MESSAGES_DATA = {
@@ -87,13 +87,20 @@
             'Aktivitet & Natur': ['Promenad', 'Träna tillsammans', 'Sport'],
             'Kultur & Nöje': ['Bio', 'Museum / Utställning', 'Konsert / Gig'],
             'Hobby & Spel': ['Brädspel / Spelkväll', 'Fotografering'],
+            'Idé & Förslag': ['Idé/Öppen för förslag'],
             'Annat': ['Annat']
         };
 
         // --- UTILITY FUNCTIONS ---
-        const formatDateTime = (isoString) => {
+        const formatDateTime = (isoString, isTimeFlexible = false) => {
             if (!isoString) return '';
             const date = new Date(isoString);
+            
+            if (isTimeFlexible) {
+                const options = { weekday: 'short', month: 'short', day: 'numeric' };
+                return `${date.toLocaleDateString('sv-SE', options)} (Flexibel tid)`;
+            }
+
             const options = { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false };
             return date.toLocaleDateString('sv-SE', options);
         };
@@ -251,15 +258,22 @@
                                     }
                                     <div className="flex items-start gap-4">
                                         <div className="flex-1 min-w-0">
-                                            <p className="font-bold text-[#2E2E2E] truncate">{event.title}</p>
+                                            <p className="font-bold text-[#2E2E2E] break-words">{event.title}</p>
                                             <p className="text-sm text-[#2E2E2E]">{event.category}</p>
-                                            <div className="text-xs text-[#2E2E2E]/80 mt-2 flex items-center gap-2">
-                                                <Icons.clock className="w-3 h-3" />
-                                                <span className="font-bold">{formatDateTime(event.dateTime)}</span>
-                                            </div>
+                                            {event.dateTime ? (
+                                                <div className="text-xs text-[#2E2E2E]/80 mt-2 flex items-center gap-2">
+                                                    <Icons.clock className="w-3 h-3" />
+                                                    <span className="font-bold">{formatDateTime(event.dateTime, event.isTimeFlexible)}</span>
+                                                </div>
+                                            ) : (
+                                                <div className="text-xs text-salviagron mt-2 flex items-center gap-2">
+                                                    <Icons.calendar className="w-3 h-3" />
+                                                    <span className="font-bold">Flexibel tid</span>
+                                                </div>
+                                            )}
                                             <div className="text-xs text-[#2E2E2E]/80 mt-1 flex items-center gap-2">
                                                 <Icons.mapPin className="w-3 h-3" />
-                                                <span className="truncate">{event.location}</span>
+                                                <span className="break-words">{event.location}</span>
                                             </div>
                                         </div>
                                         <div className="flex items-center text-sm text-blue-600 font-semibold">
@@ -307,6 +321,7 @@
             return (
                 <div className="flex-grow flex flex-col overflow-hidden">
                     <div ref={chatContainerRef} className="flex-1 overflow-y-auto space-y-3 p-2">
+                        <div className="flex-grow"></div>
                         {messages.map(message => {
                             const sender = usersById[message.userID];
                             const isCurrentUser = sender.userID === currentUser.userID;
@@ -373,7 +388,11 @@
                             </div>
                             <p className="text-[#2E2E2E]/80 break-words">{event.description}</p>
                             <div className="space-y-3 pt-2 text-[#2E2E2E]">
-                                <div className="flex items-center gap-3"><Icons.clock className="w-5 h-5 text-[#2E2E2E]/60" /><span>{formatDateTime(event.dateTime)}</span></div>
+                                {event.dateTime ? (
+                                    <div className="flex items-center gap-3"><Icons.clock className="w-5 h-5 text-[#2E2E2E]/60" /><span>{formatDateTime(event.dateTime, event.isTimeFlexible)}</span></div>
+                                ) : (
+                                     <div className="flex items-center gap-3"><Icons.calendar className="w-5 h-5 text-salviagron" /><span className="font-semibold text-salviagron">Tid & datum bestäms i chatten</span></div>
+                                )}
                                 <div className="flex items-center gap-3"><Icons.mapPin className="w-5 h-5 text-[#2E2E2E]/60" /><span className="break-words min-w-0">{event.location}</span></div>
                                 <div className="flex items-center gap-3"><Icons.user className="w-5 h-5 text-[#2E2E2E]/60" /><span>Skapad av <strong>{creator?.name || 'Okänd'}</strong></span></div>
                             </div>
@@ -427,6 +446,13 @@
             const [isGenerating, setIsGenerating] = useState(false);
             const [locationSuggestions, setLocationSuggestions] = useState([]);
             const today = new Date().toISOString().split('T')[0];
+            const isTimeOptional = category === 'Idé/Öppen för förslag';
+
+            useEffect(() => {
+                if (isTimeOptional) {
+                    setTime('');
+                }
+            }, [isTimeOptional]);
 
             const GOTEBORG_LOCATIONS = [
                 "Östra Hamngatan, Göteborg", "Kungsgatan, Göteborg", "Vasagatan, Göteborg",
@@ -472,6 +498,7 @@
                         'Konsert / Gig': [`Livemusik! Vi går och ser ${title || 'ett grymt band'} på ${location || 'scenen'}. Häng på för en oförglömlig kväll! Starttid ${time || 'utsatt tid'}.`],
                         'Brädspel / Spelkväll': [`Dags för spelkväll! Vi samlas hemma hos mig eller på ${location || 'ett spelcafé'} för lite brädspel och trevligt umgänge. Start ${time || 'utsatt tid'}.`],
                         'Fotografering': [`Sugen på att fota? Vi tar en fotopromenad runt ${location || 'ett vackert område'} och fångar dagen på bild. Vi börjar vid ${time || 'utsatt tid'}.`],
+                        'Idé/Öppen för förslag': [`Ett förslag till träff: ${title || ''}. Vi kan ses vid ${location || 'utsatt plats'} runt ${date || 'angivet datum'}. Detaljer bestämmer vi i chatten!`],
                         'Annat': [`En avslappnad träff: ${title || ''}. Vi träffas vid ${location || 'utsatt plats'} runt ${time || 'starttid'}. Hoppas vi ses!`]
                     };
                     const categoryTemplates = templates[category] || templates['Annat'];
@@ -483,13 +510,20 @@
             
             const handleSubmit = (e) => {
                 e.preventDefault();
-                const dateTime = combineDateAndTime(date, time);
-                if (!dateTime) {
-                    console.error("Date and time must be set.");
+                
+                const timeProvided = !!time.trim();
+                if (!date) {
+                    alert("Vänligen fyll i ett datum.");
                     return;
                 }
+                
+                const finalTime = !timeProvided ? '00:00' : time;
+                const dateTime = combineDateAndTime(date, finalTime);
+
                 const newEvent = {
-                    eventID: Date.now(), title, description, category, location, dateTime, creatorUserID: currentUser.userID, attendeeUserIDs: [currentUser.userID]
+                    eventID: Date.now(), title, description, category, location, dateTime, 
+                    isTimeFlexible: !timeProvided,
+                    creatorUserID: currentUser.userID, attendeeUserIDs: [currentUser.userID]
                 };
                 onCreate(newEvent);
             };
@@ -507,7 +541,7 @@
                         <form onSubmit={handleSubmit} className="space-y-4">
                             <div>
                                 <label className="text-sm font-bold text-[#2E2E2E]">Titel</label>
-                                <input type="text" value={title} onChange={e => setTitle(e.target.value)} required className="w-full mt-1 p-2 border border-slate-200/80 rounded-lg focus:outline-none focus:ring-2 focus:ring-salviagron bg-white" maxLength="29" />
+                                <input type="text" value={title} onChange={e => setTitle(e.target.value)} required className="w-full mt-1 p-2 border border-slate-200/80 rounded-lg focus:outline-none focus:ring-2 focus:ring-salviagron bg-white" maxLength="45" />
                             </div>
                             <div>
                                 <label className="text-sm font-bold text-[#2E2E2E]">Kategori</label>
@@ -530,6 +564,9 @@
                                     <optgroup label="🎲 Hobby & Spel">
                                         <option>Brädspel / Spelkväll</option>
                                         <option>Fotografering</option>
+                                    </optgroup>
+                                    <optgroup label="💡 Idé & Förslag">
+                                        <option>Idé/Öppen för förslag</option>
                                     </optgroup>
                                     <optgroup label="✨ Annat">
                                         <option>Annat</option>
@@ -572,9 +609,9 @@
                                     </div>
                                 </div>
                                 <div className="flex-1">
-                                    <label className="text-sm font-bold text-[#2E2E2E]">Tid</label>
+                                    <label className="text-sm font-bold text-[#2E2E2E]">Tid (Valfritt)</label>
                                      <div className="relative mt-1">
-                                        <input type="time" step="900" value={time} onChange={e => setTime(e.target.value)} required className="w-full p-2 pr-10 border border-slate-200/80 rounded-lg focus:outline-none focus:ring-2 focus:ring-salviagron bg-white" />
+                                        <input type="time" step="900" value={time} onChange={e => setTime(e.target.value)} className="w-full p-2 pr-10 border border-slate-200/80 rounded-lg focus:outline-none focus:ring-2 focus:ring-salviagron bg-white" />
                                          <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none"><Icons.clock className="w-5 h-5 text-slate-400" /></div>
                                     </div>
                                 </div>
@@ -612,7 +649,7 @@
                     setLocation(eventToEdit.location);
                     setDescription(eventToEdit.description);
                     setDate(eventDate.toISOString().split('T')[0]);
-                    setTime(eventDate.toTimeString().substring(0, 5));
+                    setTime(eventToEdit.isTimeFlexible ? '' : eventDate.toTimeString().substring(0, 5));
                 }
             }, [eventToEdit]);
 
@@ -621,16 +658,28 @@
                 return <div className="p-4">Kunde inte hitta träffen att redigera.</div>;
             }
 
+            const isTimeOptional = category === 'Idé/Öppen för förslag';
+
             const handleSubmit = (e) => {
                 e.preventDefault();
-                const dateTime = combineDateAndTime(date, time);
-                if (!dateTime) {
-                    console.error("Date and time must be set.");
+                
+                const timeProvided = !!time.trim();
+                if (!date) {
+                    alert("Vänligen fyll i ett datum.");
                     return;
                 }
+                
+                const finalTime = !timeProvided ? '00:00' : time;
+                if (!isTimeOptional && !timeProvided) {
+                    alert("Vänligen fyll i en tid för denna kategori.");
+                    return;
+                }
+                const dateTime = combineDateAndTime(date, finalTime);
+
                 const updatedEvent = {
                     ...eventToEdit,
-                    title, description, category, location, dateTime
+                    title, description, category, location, dateTime,
+                    isTimeFlexible: !timeProvided
                 };
                 onUpdate(updatedEvent);
             };
@@ -652,7 +701,7 @@
                         <form onSubmit={handleSubmit} className="space-y-4">
                             <div>
                                 <label className="text-sm font-bold text-[#2E2E2E]">Titel</label>
-                                <input type="text" value={title} onChange={e => setTitle(e.target.value)} required className="w-full mt-1 p-2 border border-slate-200/80 rounded-lg focus:outline-none focus:ring-2 focus:ring-salviagron bg-white" maxLength="29" />
+                                <input type="text" value={title} onChange={e => setTitle(e.target.value)} required className="w-full mt-1 p-2 border border-slate-200/80 rounded-lg focus:outline-none focus:ring-2 focus:ring-salviagron bg-white" maxLength="45" />
                             </div>
                             <div>
                                 <label className="text-sm font-bold text-[#2E2E2E]">Kategori</label>
@@ -676,6 +725,9 @@
                                         <option>Brädspel / Spelkväll</option>
                                         <option>Fotografering</option>
                                     </optgroup>
+                                     <optgroup label="💡 Idé & Förslag">
+                                        <option>Idé/Öppen för förslag</option>
+                                    </optgroup>
                                     <optgroup label="✨ Annat">
                                         <option>Annat</option>
                                     </optgroup>
@@ -694,9 +746,9 @@
                                     </div>
                                 </div>
                                 <div className="flex-1">
-                                    <label className="text-sm font-bold text-[#2E2E2E]">Tid</label>
+                                    <label className="text-sm font-bold text-[#2E2E2E]">Tid (Valfritt)</label>
                                      <div className="relative mt-1">
-                                        <input type="time" step="900" value={time} onChange={e => setTime(e.target.value)} required className="w-full p-2 pr-10 border border-slate-200/80 rounded-lg focus:outline-none focus:ring-2 focus:ring-salviagron bg-white" />
+                                        <input type="time" step="900" value={time} onChange={e => setTime(e.target.value)} required={!isTimeOptional} className="w-full p-2 pr-10 border border-slate-200/80 rounded-lg focus:outline-none focus:ring-2 focus:ring-salviagron bg-white" />
                                          <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none"><Icons.clock className="w-5 h-5 text-slate-400" /></div>
                                     </div>
                                 </div>
@@ -744,7 +796,7 @@
                     const eventDate = new Date(event.dateTime);
                     const isCreator = event.creatorUserID === currentUser.userID;
 
-                    if (eventDate < now) {
+                    if (!event.dateTime || eventDate < now) {
                         pastJoined.push(event);
                     } else {
                         if (isCreator) {
@@ -755,9 +807,18 @@
                     }
                 });
                 
-                upcomingJoined.sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime));
-                pastJoined.sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime));
-                createdEvents.sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime));
+                upcomingJoined.sort((a, b) => {
+                    if (!a.dateTime) return 1; if (!b.dateTime) return -1;
+                    return new Date(a.dateTime) - new Date(b.dateTime)
+                });
+                pastJoined.sort((a, b) => {
+                    if (!a.dateTime) return 1; if (!b.dateTime) return -1;
+                    return new Date(b.dateTime) - new Date(a.dateTime)
+                });
+                createdEvents.sort((a, b) => {
+                    if (!a.dateTime) return 1; if (!b.dateTime) return -1;
+                    return new Date(a.dateTime) - new Date(b.dateTime)
+                });
                 
                 return { upcomingJoined, pastJoined, createdEvents };
 
@@ -775,15 +836,15 @@
                         }
                         <div className="flex items-start gap-4">
                             <div className="flex-1 min-w-0">
-                                <p className="font-bold text-[#2E2E2E] truncate">{event.title}</p>
+                                <p className="font-bold text-[#2E2E2E] break-words">{event.title}</p>
                                 <p className="text-sm text-gray-600">{event.category}</p>
                                 <div className="text-xs text-gray-500 mt-2 flex items-center gap-2">
                                     <Icons.clock className="w-3 h-3" />
-                                    <span className="font-bold">{formatDateTime(event.dateTime)}</span>
+                                    <span className="font-bold">{formatDateTime(event.dateTime, event.isTimeFlexible)}</span>
                                 </div>
                                 <div className="text-xs text-gray-500 mt-1 flex items-center gap-2">
                                     <Icons.mapPin className="w-3 h-3" />
-                                    <span className="truncate">{event.location}</span>
+                                    <span className="break-words">{event.location}</span>
                                 </div>
                             </div>
                             <div className="flex items-center text-sm text-blue-600 font-semibold">
@@ -809,20 +870,20 @@
                     <header className="p-4 border-b border-slate-200/50 bg-white/80 backdrop-blur-sm sticky top-0 z-10"><h1 className="text-3xl font-bold text-salviagron">Mina träffar</h1></header>
                     <main className="flex-grow overflow-y-auto p-4 space-y-6">
                          <div>
-                            <h2 className="text-lg font-bold text-[#2E2E2E] text-center mb-3 underline">På gång för mig ({categorizedEvents.upcomingJoined.length})</h2>
+                            <h2 className="text-xl font-bold text-[#2E2E2E] text-center mb-3 underline">På gång för mig ({categorizedEvents.upcomingJoined.length})</h2>
                             {categorizedEvents.upcomingJoined.length > 0 ? (
                                 <div className="space-y-4">{categorizedEvents.upcomingJoined.map(event => (<EventCard key={event.eventID} event={event} onNavigate={onNavigate} currentUser={currentUser} />))}</div>
                             ) : (<EmptyState icon={Icons.calendar} title="Inga kommande träffar" text="Gå med i en träff för att se den här." />)}
                         </div>
                          <div>
-                            <h2 className="text-lg font-bold text-[#2E2E2E] text-center mb-3 underline">Mina skapade träffar ({categorizedEvents.createdEvents.length})</h2>
+                            <h2 className="text-xl font-bold text-[#2E2E2E] text-center mb-3 underline">Mina skapade träffar ({categorizedEvents.createdEvents.length})</h2>
                             {categorizedEvents.createdEvents.length > 0 ? (
                                 <div className="space-y-4">{categorizedEvents.createdEvents.map(event => (<EventCard key={event.eventID} event={event} onNavigate={onNavigate} currentUser={currentUser} />))}</div>
                             ) : (<EmptyState icon={Icons.plus} title="Du har inte skapat något" text="Klicka på plus-knappen för att skapa din första träff." />)}
                         </div>
                          {categorizedEvents.pastJoined.length > 0 && (
                             <div>
-                                <h2 className="text-lg font-bold text-[#2E2E2E] text-center mb-3 underline">Tidigare träffar ({categorizedEvents.pastJoined.length})</h2>
+                                <h2 className="text-xl font-bold text-[#2E2E2E] text-center mb-3 underline">Tidigare träffar ({categorizedEvents.pastJoined.length})</h2>
                                 <div className="space-y-4 opacity-60">
                                     {categorizedEvents.pastJoined.map(event => (<EventCard key={event.eventID} event={event} onNavigate={onNavigate} currentUser={currentUser} />))}
                                 </div>
@@ -999,7 +1060,11 @@
             const { createdChats, attendingChats } = useMemo(() => {
                 const joinedEvents = events
                     .filter(e => e.attendeeUserIDs.includes(currentUser.userID))
-                    .sort((a,b) => new Date(b.dateTime) - new Date(a.dateTime));
+                    .sort((a,b) => {
+                        if (!a.dateTime) return 1;
+                        if (!b.dateTime) return -1;
+                        return new Date(b.dateTime) - new Date(a.dateTime)
+                    });
                 
                 const created = joinedEvents.filter(e => e.creatorUserID === currentUser.userID);
                 const attending = joinedEvents.filter(e => e.creatorUserID !== currentUser.userID);
@@ -1019,15 +1084,22 @@
                             }
                             <div className="flex items-start gap-4">
                                 <div className="flex-1 min-w-0">
-                                    <p className="font-bold text-[#2E2E2E] truncate">{event.title}</p>
+                                    <p className="font-bold text-[#2E2E2E] break-words">{event.title}</p>
                                     <p className="text-sm text-[#2E2E2E]">{event.category}</p>
-                                    <div className="text-xs text-[#2E2E2E]/80 mt-2 flex items-center gap-2">
-                                        <Icons.clock className="w-3 h-3" />
-                                        <span className="font-bold">{formatDateTime(event.dateTime)}</span>
-                                    </div>
+                                    {event.dateTime ? (
+                                        <div className="text-xs text-[#2E2E2E]/80 mt-2 flex items-center gap-2">
+                                            <Icons.clock className="w-3 h-3" />
+                                            <span className="font-bold">{formatDateTime(event.dateTime, event.isTimeFlexible)}</span>
+                                        </div>
+                                    ) : (
+                                        <div className="text-xs text-salviagron mt-2 flex items-center gap-2">
+                                            <Icons.calendar className="w-3 h-3" />
+                                            <span className="font-bold">Flexibel tid</span>
+                                        </div>
+                                    )}
                                     <div className="text-xs text-[#2E2E2E]/80 mt-1 flex items-center gap-2">
                                         <Icons.mapPin className="w-3 h-3" />
-                                        <span className="truncate">{event.location}</span>
+                                        <span className="break-words">{event.location}</span>
                                     </div>
                                 </div>
                                 <div className="flex items-center text-sm text-blue-600 font-semibold">
@@ -1153,54 +1225,54 @@
                 }
             }, [toast]);
 
-            const showToast = (message) => {
+            const showToast = useCallback((message) => {
                 setToast({ show: true, message });
-            };
+            }, []);
 
-            const handleLogin = (user) => {
+            const handleLogin = useCallback((user) => {
                 setCurrentUser(user);
                 setViewStack([{ name: 'home', payload: null }]);
-            };
+            }, []);
             
-            const handleLogout = () => {
+            const handleLogout = useCallback(() => {
                 setCurrentUser(null);
                setViewStack([{ name: 'login', payload: null }]);
-            };
+            }, []);
 
-            const handleNavigate = (viewName, payload = null) => {
+            const handleNavigate = useCallback((viewName, payload = null) => {
                 setViewStack(prevStack => [...prevStack, { name: viewName, payload }]);
-            };
+            }, []);
             
-            const handleTabNavigate = (viewName) => {
+            const handleTabNavigate = useCallback((viewName) => {
                  setViewStack([{ name: viewName, payload: null }]);
-            };
+            }, []);
 
-            const handleBack = () => {
+            const handleBack = useCallback(() => {
                 setViewStack(prevStack => prevStack.length > 1 ? prevStack.slice(0, -1) : prevStack);
-            };
+            }, []);
             
-            const handleCreateEvent = (newEvent) => {
+            const handleCreateEvent = useCallback((newEvent) => {
                 setEvents(prevEvents => [newEvent, ...prevEvents]);
                 setViewStack([{ name: 'home', payload: null }]);
                 showToast('Din träff har skapats!');
-            };
+            }, [showToast]);
 
-             const handleUpdateEvent = (updatedEvent) => {
+             const handleUpdateEvent = useCallback((updatedEvent) => {
                 setEvents(prevEvents => prevEvents.map(event => 
                     event.eventID === updatedEvent.eventID ? updatedEvent : event
                 ));
                 handleBack();
                 showToast('Träffen har uppdaterats!');
-            };
+            }, [handleBack, showToast]);
 
-            const handleDeleteEvent = (eventId) => {
+            const handleDeleteEvent = useCallback((eventId) => {
                 setEvents(prevEvents => prevEvents.filter(event => event.eventID !== eventId));
                 setViewStack([{ name: 'home', payload: null }]);
                 showToast('Träffen har tagits bort.');
-            };
+            }, [showToast]);
 
             
-            const handleJoinEvent = (eventId) => {
+            const handleJoinEvent = useCallback((eventId) => {
                 setEvents(prevEvents => prevEvents.map(event => {
                     if (event.eventID === eventId && !event.attendeeUserIDs.includes(currentUser.userID)) {
                         return { ...event, attendeeUserIDs: [...event.attendeeUserIDs, currentUser.userID] };
@@ -1208,9 +1280,9 @@
                     return event;
                 }));
                 showToast('Du är nu med i träffen!');
-            };
+            }, [currentUser, showToast]);
 
-            const handleLeaveEvent = (eventId) => {
+            const handleLeaveEvent = useCallback((eventId) => {
                 setEvents(prevEvents => prevEvents.map(event => {
                     if (event.eventID === eventId) {
                         return { ...event, attendeeUserIDs: event.attendeeUserIDs.filter(id => id !== currentUser.userID) };
@@ -1218,9 +1290,9 @@
                     return event;
                 }));
                 showToast('Du har lämnat träffen.');
-            };
+            }, [currentUser, showToast]);
 
-            const handleSignUp = (newUserData) => {
+            const handleSignUp = useCallback((newUserData) => {
                 const newUser = {
                     ...newUserData,
                     userID: Date.now(),
@@ -1228,9 +1300,9 @@
                 setUsers(prevUsers => [...prevUsers, newUser]);
                 setCurrentUser(newUser);
                setViewStack([{ name: 'home', payload: null }]);
-            };
+            }, []);
 
-            const handleSendMessage = (eventId, text) => {
+            const handleSendMessage = useCallback((eventId, text) => {
                 const newMessage = {
                     messageID: Date.now(),
                     userID: currentUser.userID,
@@ -1241,7 +1313,7 @@
                     ...prevMessages,
                     [eventId]: [...(prevMessages[eventId] || []), newMessage]
                 }));
-            };
+            }, [currentUser]);
 
             const renderView = () => {
                 if (!currentUser) {
@@ -1322,7 +1394,7 @@
                         {['home', 'my-events'].includes(currentView.name) && (
                                 <button 
                                  onClick={() => handleNavigate('create')} 
-                                 className="absolute bottom-24 right-6 w-14 h-14 rounded-full bg-salviagron text-white shadow-lg flex items-center justify-center hover:opacity-90 transition-transform active:scale-95 duration-150 border-[0.1mm] border-ljusbla"
+                                 className="absolute bottom-24 right-6 w-14 h-14 rounded-full bg-salviagron text-white shadow-lg flex items-center justify-center hover:opacity-90 transition-transform active:scale-95 duration-150 border-[0.1mm] border-ecru"
                             >
                                 <Icons.plus className="w-8 h-8" />
                             </button>

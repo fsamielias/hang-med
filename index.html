@@ -1170,6 +1170,44 @@
         const ChatDetailScreen = memo(({ eventId, events, usersById, currentUser, chatMessages, onSendMessage, onBack }) => {
             const event = useMemo(() => events.find(e => e.eventID === eventId), [events, eventId]);
 
+            const [newMessage, setNewMessage] = useState('');
+            const chatContainerRef = useRef(null);
+            const inputRef = useRef(null);
+            const formRef = useRef(null);
+
+            const messages = chatMessages[eventId] || [];
+
+            useEffect(() => {
+                if (chatContainerRef.current) {
+                    chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+                }
+            }, [messages]);
+            
+            useEffect(() => {
+                const inputElement = inputRef.current;
+                if (!inputElement) return;
+
+                const handleFocus = () => {
+                    setTimeout(() => {
+                        formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+                    }, 300);
+                };
+
+                inputElement.addEventListener('focus', handleFocus);
+                return () => {
+                    inputElement.removeEventListener('focus', handleFocus);
+                };
+            }, []);
+
+            const handleSend = (e) => {
+                e.preventDefault();
+                if (newMessage.trim()) {
+                    onSendMessage(eventId, newMessage);
+                    setNewMessage('');
+                    inputRef.current?.focus();
+                }
+            };
+
             if (!event) {
                 useEffect(() => onBack(), [onBack]);
                 return null;
@@ -1179,34 +1217,65 @@
 
             return (
                 <div className="flex flex-col h-full bg-white">
-                    <header className="p-4 flex items-center gap-4 border-b border-slate-200/50 bg-white/80 backdrop-blur-sm sticky top-0 z-10">
+                    <header className="p-4 flex items-center gap-4 border-b border-slate-200/50 bg-white/80 backdrop-blur-sm sticky top-0 z-10 flex-shrink-0">
                          <button onClick={onBack} className="p-2 rounded-full hover:bg-slate-100/60">
                             <Icons.arrowLeft className="w-6 h-6 text-[#2E2E2E]" />
                         </button>
                         <h1 className="text-lg font-bold text-[#2E2E2E] truncate">{event.title}</h1>
                     </header>
-                    <main className="flex-grow flex flex-col p-4 space-y-4 overflow-hidden">
-                        <p className="text-sm text-slate-500 break-words flex-shrink-0">{event.description}</p>
-                        <div className="flex-shrink-0">
-                             <div className="flex flex-wrap gap-2">
-                                {attendees.map(attendee => attendee && (
-                                    <div key={attendee.userID} className={`flex items-center gap-2 pr-3 py-1 bg-slate-100 text-[#2E2E2E] rounded-full text-sm`}>
-                                        <div className="w-6 h-6 rounded-full bg-ecru flex items-center justify-center font-bold text-[#2E2E2E]/70 text-xs">
-                                            {attendee.name.charAt(0)}
-                                        </div>
-                                        {attendee.name}
+                    
+                    <main ref={chatContainerRef} className="flex-1 overflow-y-auto p-4 space-y-4">
+                        <p className="text-sm text-slate-500 break-words">{event.description}</p>
+                        <div className="flex flex-wrap gap-2">
+                            {attendees.map(attendee => attendee && (
+                                <div key={attendee.userID} className={`flex items-center gap-2 pr-3 py-1 bg-slate-100 text-[#2E2E2E] rounded-full text-sm`}>
+                                    <div className="w-6 h-6 rounded-full bg-ecru flex items-center justify-center font-bold text-[#2E2E2E]/70 text-xs">
+                                        {attendee.name.charAt(0)}
                                     </div>
-                                ))}
-                            </div>
+                                    {attendee.name}
+                                </div>
+                            ))}
                         </div>
-                        <ChatComponent 
-                            eventId={eventId} 
-                            messages={chatMessages[eventId] || []} 
-                            usersById={usersById} 
-                            currentUser={currentUser} 
-                            onSendMessage={onSendMessage} 
-                        />
+                        
+                        <div className="space-y-3">
+                             {messages.map(message => {
+                                const sender = usersById[message.userID];
+                                const isCurrentUser = sender.userID === currentUser.userID;
+                                return (
+                                    <div key={message.messageID} className={`flex items-start gap-2 ${isCurrentUser ? 'justify-end' : 'justify-start'}`}>
+                                        {!isCurrentUser && (
+                                            <div className="w-8 h-8 rounded-full bg-ecru flex items-center justify-center font-bold text-[#2E2E2E]/70 text-sm flex-shrink-0">
+                                                {sender.name.charAt(0)}
+                                            </div>
+                                        )}
+                                        <div className={`flex flex-col ${isCurrentUser ? 'items-end' : 'items-start'}`}>
+                                            {!isCurrentUser && (
+                                                <span className="text-xs text-slate-500 mb-0.5 ml-3">{sender.name}</span>
+                                            )}
+                                            <div className={`max-w-xs p-3 rounded-2xl ${isCurrentUser ? 'bg-salviagron text-white rounded-br-none' : 'bg-slate-100 text-slate-800 rounded-bl-none'}`}>
+                                                <p className="text-sm break-words">{message.text}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                            {messages.length === 0 && <p className="text-sm text-slate-400 text-center py-4">Inga meddelanden än. Bli den första att skriva!</p>}
+                        </div>
                     </main>
+                    
+                    <form ref={formRef} onSubmit={handleSend} className="p-2 flex-shrink-0 relative border-t border-slate-200/50">
+                        <textarea 
+                            ref={inputRef}
+                            value={newMessage}
+                            onChange={(e) => setNewMessage(e.target.value)}
+                            placeholder="Skriv ett meddelande..."
+                            className="w-full p-3 pr-14 border border-slate-200/80 rounded-xl focus:outline-none focus:ring-2 focus:ring-salviagron bg-white resize-none"
+                            rows="2"
+                        ></textarea>
+                        <button type="submit" className="absolute top-3 right-3 p-2 rounded-full bg-salviagron text-white hover:opacity-90 transition-opacity">
+                            <Icons.send className="w-5 h-5" />
+                        </button>
+                    </form>
                 </div>
             )
         });
@@ -1448,6 +1517,7 @@
     </script>
 </body>
 </html>
+
 
 
 
